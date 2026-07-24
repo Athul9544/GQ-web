@@ -1,0 +1,10 @@
+# Never commit the admin password.
+data/admin-password.txt
+
+# OS / editor noise.
+.DS_Store
+Thumbs.db
+*.log
+
+# No dependencies are used, but just in case.
+node_modules/

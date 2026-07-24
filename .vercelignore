@@ -1,0 +1,14 @@
+# The Node server, its tooling, and the admin portal are LOCAL only — Vercel has
+# no writable disk to run them against. You publish by running the admin locally,
+# then committing the result (see DEPLOY.md).
+server.js
+tools/
+admin.html
+assets/js/admin.js
+assets/css/admin.css
+
+# Secret — never ship this.
+data/admin-password.txt
+
+# data/posts.json and assets/img/uploads/ ARE deployed on purpose: the blog page
+# reads posts.json as a static file when there is no live API.

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Blog Admin - Golden Qube</title>
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/style.css?v=mrxcojfe">
+<link rel="stylesheet" href="assets/css/admin.css?v=mrxcojfe">
+</head>
+<body class="admin-body">
+
+<!-- ===================================================== login -->
+<div class="login" id="login" hidden>
+  <form class="login__card" id="login-form">
+    <img class="login__logo" src="assets/img/logo.png" alt="Golden Qube">
+    <h1>Admin</h1>
+    <p>Sign in to manage the posts on your blog page.</p>
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Enter admin password" autocomplete="current-password" required>
+    <button class="btn" type="submit">Sign In</button>
+    <p class="login__error" id="login-error" hidden></p>
+  </form>
+</div>
+
+<!-- ===================================================== portal -->
+<div class="admin" id="admin" hidden>
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <img src="assets/img/logo.png" alt="Golden Qube">
+      <span>Blog Admin</span>
+    </div>
+    <div class="admin__bar-actions">
+      <a class="btn btn--outline btn--sm" href="blog.html" target="_blank" rel="noopener">View Blog</a>
+      <button class="btn btn--sm" id="new-post" type="button">New Post</button>
+      <button class="admin__signout" id="signout" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <main class="admin__main container">
+
+    <!-- editor ------------------------------------------------------------ -->
+    <section class="admin__panel" id="editor" hidden>
+      <div class="admin__panel-head">
+        <h2 id="editor-title">New Post</h2>
+        <button class="admin__close" id="cancel-edit" type="button" aria-label="Close editor">&times;</button>
+      </div>
+
+      <form id="post-form">
+        <input type="hidden" id="post-id">
+
+        <div class="field">
+          <label for="title">Title <span>required</span></label>
+          <input id="title" type="text" maxlength="120" placeholder="e.g. 5 SEO changes that actually moved the needle" required>
+        </div>
+
+        <div class="field">
+          <label for="category">Category</label>
+          <input id="category" type="text" maxlength="40" placeholder="Digital Marketing">
+        </div>
+
+        <div class="field">
+          <label for="description">Description <span>required</span></label>
+          <textarea id="description" rows="6" placeholder="Write the post summary or full text here." required></textarea>
+        </div>
+
+        <div class="field">
+          <label>Image</label>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="image" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+            <div class="dropzone__empty" id="dropzone-empty">
+              <strong>Choose an image</strong>
+              <span>or drag one here — PNG, JPG, WebP or GIF, up to 6 MB</span>
+            </div>
+            <div class="dropzone__preview" id="dropzone-preview" hidden>
+              <img id="preview-img" alt="Selected image preview">
+              <button class="dropzone__remove" id="remove-image" type="button">Remove image</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="form__note" id="form-error" hidden></p>
+
+        <div class="admin__form-actions">
+          <button class="btn" type="submit" id="save-post">Publish Post</button>
+          <button class="btn btn--outline" type="button" id="cancel-edit-2">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- list -------------------------------------------------------------- -->
+    <section class="admin__panel">
+      <div class="admin__panel-head">
+        <h2>Posts <span class="admin__count" id="post-count">0</span></h2>
+      </div>
+      <div id="post-list" class="post-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="assets/js/admin.js?v=mrxcojfe"></script>
+</body>
+</html>
