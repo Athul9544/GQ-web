@@ -1,11 +1,14 @@
 # The Node server, its tooling, and the admin portal are LOCAL only — Vercel has
 # no writable disk to run them against. You publish by running the admin locally,
 # then committing the result (see DEPLOY.md).
-server.js
-tools/
-admin.html
-assets/js/admin.js
-assets/css/admin.css
+#
+# Leading slashes anchor these to the project root. Without them, a bare
+# "tools/" also matches assets/img/tools/ and strips the training-page logos.
+/server.js
+/tools/
+/admin.html
+/assets/js/admin.js
+/assets/css/admin.css
 
 # Secret — never ship this.
 data/admin-password.txt
