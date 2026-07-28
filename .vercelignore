@@ -1,14 +1,14 @@
-# The Node server, its tooling, and the admin portal are LOCAL only — Vercel has
-# no writable disk to run them against. You publish by running the admin locally,
-# then committing the result (see DEPLOY.md).
+# The admin portal now ships: /admin is served live and talks to the serverless
+# API in api/, which stores posts and images by committing them to the repo.
+#
+# server.js stays out. It is the local-only equivalent of api/, and leaving a
+# server.js in the project root makes Vercel detect this as a Node server app
+# ("No entrypoint found") instead of a static site.
 #
 # Leading slashes anchor these to the project root. Without them, a bare
 # "tools/" also matches assets/img/tools/ and strips the training-page logos.
 /server.js
 /tools/
-/admin.html
-/assets/js/admin.js
-/assets/css/admin.css
 
 # Secret — never ship this.
 data/admin-password.txt

@@ -1,82 +1,88 @@
 # Deploying to Vercel
 
-This is the **git-based** setup: the live site is static (fast, free), and you
-publish blog posts by running the admin locally and pushing the result.
+The whole site runs on Vercel, admin portal included. You sign in at
+`/admin` on the live site and publish from there — no local server needed.
 
-## Why it works this way
+## How it works
 
-Vercel runs static files and serverless functions — it has **no persistent
-writable disk**. The blog CMS (`server.js`) writes posts and images to disk, so
-it can't run live on Vercel. Instead:
+Vercel has no writable disk and no memory shared between requests, so the two
+things `server.js` keeps locally had to move:
 
-- The five pages, the reviews section, animations, chatbot — all static, deploy fine.
-- The blog reads `data/posts.json` as a static file, so **posts you commit show up live**.
-- You write posts with the admin **locally**, then commit and push. Vercel redeploys.
+| Local (`server.js`) | Live (`api/`) |
+| --- | --- |
+| posts in `data/posts.json` on disk | posts committed to the GitHub repo |
+| images in `assets/img/uploads/` | images committed to the GitHub repo |
+| sessions in an in-memory `Map` | stateless HMAC-signed tokens |
 
-The server, tools and admin portal are excluded from the deploy (`.vercelignore`)
-because they only make sense locally.
+Publishing a post commits it to `Athul9544/GQ-web`, which triggers a Vercel
+redeploy. The blog page reads `/api/posts` first and falls back to the committed
+`data/posts.json`, so a new post appears immediately rather than waiting for
+that redeploy to finish.
 
-## One-time setup
+`server.js` still works for local editing and is excluded from the deploy — a
+`server.js` in the project root makes Vercel detect a Node server app and fail
+the build with "No entrypoint found".
 
-1. Put the project in a Git repo and push it to GitHub (or GitLab/Bitbucket):
+## Required environment variables
 
-   ```powershell
-   cd "c:\Users\HP\Desktop\GQ Web\goldenqube-local"
-   git init
-   git add .
-   git commit -m "Golden Qube site"
-   git branch -M main
-   git remote add origin https://github.com/YOUR-USERNAME/goldenqube.git
-   git push -u origin main
-   ```
+The admin returns a 503 explaining what is missing until all three are set in
+**Vercel → Settings → Environment Variables** (all environments), followed by a
+redeploy.
 
-   `.gitignore` keeps the admin password out of the repo.
+| Variable | What to use |
+| --- | --- |
+| `ADMIN_PASSWORD` | The password you want for `/admin`. |
+| `SESSION_SECRET` | A long random string. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Changing it signs everyone out. |
+| `GITHUB_TOKEN` | A GitHub token that can write to the repo. |
 
-2. On [vercel.com](https://vercel.com): **Add New → Project → Import** your repo.
-   Framework preset: **Other**. Root directory: leave as is. Click **Deploy**.
+Two more are optional and default to this repo: `GITHUB_REPO`
+(`Athul9544/GQ-web`) and `GITHUB_BRANCH` (`main`).
 
-   `vercel.json` handles the rest — clean URLs (`/training`, not `/training.html`)
-   and cache headers. No build command is needed.
+### Creating the GitHub token
 
-Your site is live at `https://your-project.vercel.app` in about a minute.
+GitHub → **Settings → Developer settings → Personal access tokens →
+Fine-grained tokens → Generate new token**:
 
-## Publishing a blog post
+- **Repository access:** Only select repositories → `Athul9544/GQ-web`
+- **Permissions:** Repository permissions → **Contents: Read and write**
+- Copy the token once — GitHub will not show it again.
 
-Each time you want to add, edit or delete a post:
+The token can write to this repository, so treat it like a password. It lives
+only in Vercel's environment variables, never in the repo.
 
-```powershell
-cd "c:\Users\HP\Desktop\GQ Web\goldenqube-local"
-node server.js
-```
+## Publishing a post
 
-1. Open <http://localhost:5500/admin> and sign in.
-2. Add, edit or delete posts as usual.
-3. Stop the server (Ctrl+C), then commit and push what changed:
+1. Go to `/admin` on the live site and sign in.
+2. Add, edit or delete posts.
 
-   ```powershell
-   git add data/posts.json assets/img/uploads
-   git commit -m "New blog post: <title>"
-   git push
-   ```
+Each change commits to the repo and triggers a redeploy. Text appears on the
+blog straight away; **an uploaded image needs the redeploy to finish (about a
+minute) before it loads**, because images are served as static files.
 
-Vercel redeploys automatically and the post is live within a minute.
+Images are capped at **3 MB**. Vercel rejects request bodies over 4.5 MB before
+the API runs, and base64 encoding inflates a file by about a third.
+
+## Editing locally instead
+
+`node server.js` still serves the site and admin at `http://localhost:5500`,
+writing to disk as before. Commit `data/posts.json` and `assets/img/uploads/`
+and push when done.
+
+Don't edit in both places without pulling first — the live admin commits
+directly to `main`, so a local copy goes stale as soon as you publish online.
 
 ## What is where
 
-| Runs on Vercel (deployed) | Runs locally only |
+| Deployed | Local only |
 | --- | --- |
-| `index/training/contact/blog/privacy` pages | `server.js` — the CMS backend |
-| `assets/` (css, js, images, uploads) | `admin.html`, `admin.js`, `admin.css` |
-| `data/posts.json` (read as a static file) | `tools/` scripts |
-| `assets/data/reviews.json` (Google reviews) | `data/admin-password.txt` |
+| `index/training/contact/blog/privacy` pages | `server.js` — the local CMS backend |
+| `admin.html`, `assets/js/admin.js`, `assets/css/admin.css` | `tools/` scripts |
+| `api/` — login, session, posts | `data/admin-password.txt` |
+| `assets/` and `data/posts.json` | |
 
 ## Custom domain
 
-In the Vercel project: **Settings → Domains → Add**, enter `goldenqube.com`,
-and follow the DNS instructions. Vercel issues the HTTPS certificate automatically.
-
-## If you later want a live admin on the deployed site
-
-That needs a database and blob storage (Vercel KV + Vercel Blob, or a host with a
-real disk like Render or Railway running `server.js` unchanged). Ask and it can be
-wired up — it's a bigger change than this git-based flow.
+**Settings → Domains → Add**, enter `goldenqube.com`, follow the DNS
+instructions. Vercel issues the HTTPS certificate automatically. Note that
+`goldenqube.com` currently points at a WordPress site behind Cloudflare, so its
+DNS has to be moved before it will serve this project.

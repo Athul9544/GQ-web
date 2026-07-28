@@ -189,8 +189,10 @@
     if (!/^image\/(png|jpeg|jpg|webp|gif)$/.test(file.type)) {
       return toast('Use a PNG, JPG, WebP or GIF image', true);
     }
-    if (file.size > 6 * 1024 * 1024) {
-      return toast('That image is over 6 MB — please use a smaller one', true);
+    // Vercel rejects request bodies over 4.5 MB before the API runs, and base64
+    // inflates a file by about a third — so 3 MB of image is the real ceiling.
+    if (file.size > 3 * 1024 * 1024) {
+      return toast('That image is over 3 MB — please use a smaller one', true);
     }
     var reader = new FileReader();
     reader.onload = function () {
