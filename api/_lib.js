@@ -19,8 +19,14 @@ const crypto = require('crypto');
 const REPO = process.env.GITHUB_REPO || 'Athul9544/GQ-web';
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const SESSION_SECRET = process.env.SESSION_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+/* One less variable to set. A dedicated SESSION_SECRET is still honoured, but
+   deriving one from the password is enough: it is never sent to the browser,
+   and the only consequence is that changing the password signs everyone out. */
+const SESSION_SECRET = process.env.SESSION_SECRET || (ADMIN_PASSWORD
+  ? crypto.createHash('sha256').update('gq-session:' + ADMIN_PASSWORD).digest('hex')
+  : null);
 
 const POSTS_PATH = 'data/posts.json';
 const UPLOAD_DIR = 'assets/img/uploads';
@@ -43,9 +49,20 @@ const IMAGE_TYPES = {
 function missingConfig() {
   const missing = [];
   if (!ADMIN_PASSWORD) missing.push('ADMIN_PASSWORD');
-  if (!SESSION_SECRET) missing.push('SESSION_SECRET');
   if (!GITHUB_TOKEN) missing.push('GITHUB_TOKEN');
   return missing;
+}
+
+/* Which deployment is answering. Vercel injects these, so they need no setup —
+   and they are what tells you whether the variables went to the project that
+   actually serves this URL, and whether a redeploy has picked them up yet. */
+function deploymentInfo() {
+  return {
+    project: process.env.VERCEL_PROJECT_PRODUCTION_URL || 'unknown',
+    environment: process.env.VERCEL_ENV || 'unknown',
+    commit: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7) || 'unknown',
+    branch: process.env.VERCEL_GIT_COMMIT_REF || 'unknown'
+  };
 }
 
 /** Wrap a handler so a misconfigured deploy explains itself instead of 500ing. */
@@ -53,9 +70,14 @@ function withConfig(handler) {
   return async (req, res) => {
     const missing = missingConfig();
     if (missing.length) {
+      const at = deploymentInfo();
       return send(res, 503, {
-        error: 'Admin API not configured. Set ' + missing.join(', ') +
-               ' in the Vercel project settings, then redeploy.'
+        error: 'Admin API not configured. Set ' + missing.join(' and ') +
+               ' on the Vercel project that serves ' + at.project +
+               ' (tick Production), then redeploy. Now running commit ' +
+               at.commit + ' on ' + at.branch + '.',
+        missing,
+        deployment: at
       });
     }
     try {
@@ -284,6 +306,6 @@ async function updatePosts(mutate, message) {
 
 module.exports = {
   send, readBody, requireAuth, validToken, passwordMatches, issueToken,
-  withConfig, readPosts, updatePosts, cleanPost, removeImage, slugify,
-  MAX_IMAGE_BYTES
+  withConfig, missingConfig, deploymentInfo, readPosts, updatePosts, cleanPost,
+  removeImage, slugify, MAX_IMAGE_BYTES
 };

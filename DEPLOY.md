@@ -25,18 +25,23 @@ the build with "No entrypoint found".
 
 ## Required environment variables
 
-The admin returns a 503 explaining what is missing until all three are set in
-**Vercel → Settings → Environment Variables** (all environments), followed by a
-redeploy.
+Only two are required. Set them in **Vercel → Settings → Environment
+Variables** with **Production** ticked, then redeploy — variables are applied
+at build time, so an existing deployment never picks them up.
 
 | Variable | What to use |
 | --- | --- |
 | `ADMIN_PASSWORD` | The password you want for `/admin`. |
-| `SESSION_SECRET` | A long random string. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Changing it signs everyone out. |
 | `GITHUB_TOKEN` | A GitHub token that can write to the repo. |
 
-Two more are optional and default to this repo: `GITHUB_REPO`
-(`Athul9544/GQ-web`) and `GITHUB_BRANCH` (`main`).
+Three are optional: `SESSION_SECRET` (derived from `ADMIN_PASSWORD` when
+unset), `GITHUB_REPO` (`Athul9544/GQ-web`) and `GITHUB_BRANCH` (`main`).
+
+**Check `/api/status` first if anything misbehaves.** It answers even when
+nothing is configured, and reports which variables are present plus the
+project, commit and branch actually serving the request — which is how you
+confirm the variables landed on the right project and that a redeploy has
+picked them up.
 
 ### Creating the GitHub token
 
