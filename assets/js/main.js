@@ -387,9 +387,9 @@
      when the folder is opened as plain files — the "coming soon" notice
      already in the markup stays put. */
   function initBlogFeed() {
-    var grid = document.getElementById('blog-grid');
+    var deck = document.getElementById('blog-deck');
     var empty = document.getElementById('blog-empty');
-    if (!grid || !window.fetch) return;
+    if (!deck || !window.fetch) return;
 
     // Live server first; on a static host (Vercel) the API 404s, so fall back
     // to the committed data/posts.json that ships with the build.
@@ -405,35 +405,176 @@
         if (!Array.isArray(posts) || !posts.length) return;
         posts.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
 
-        grid.innerHTML = posts.map(function (p) {
-          var date = new Date(p.createdAt).toLocaleDateString(undefined, {
-            year: 'numeric', month: 'short', day: 'numeric'
-          });
-          var media = p.image
-            ? '<img src="' + encodeURI(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
-            : '';
+        deck.innerHTML =
+          '<div class="deck__glow"></div>' +
+          posts.map(function (p) {
+            var date = new Date(p.createdAt).toLocaleDateString(undefined, {
+              year: 'numeric', month: 'short', day: 'numeric'
+            });
+            var media = p.image
+              ? '<img src="' + encodeURI(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
+              : '';
 
-          return '<article class="post reveal">' + media +
-            '<div class="post__body">' +
-              '<div class="post__meta">' + escapeHtml(p.category || 'Golden Qube') +
-                ' &nbsp;&bull;&nbsp; ' + date + '</div>' +
-              '<h4>' + escapeHtml(p.title) + '</h4>' +
-              '<p>' + escapeHtml(p.description) + '</p>' +
-            '</div>' +
-          '</article>';
-        }).join('');
+            return '<article class="deck__card">' +
+              '<span class="deck__tag">' + escapeHtml(p.category || 'Golden Qube') + '</span>' +
+              '<button class="deck__next" type="button" aria-label="Next post">' +
+                '<svg width="14" height="14"><use href="#i-arrow"></use></svg>' +
+              '</button>' +
+              '<h3 class="deck__title">' + escapeHtml(p.title) + '</h3>' +
+              '<div class="deck__media">' + media +
+                '<span class="deck__badge">' + date + '</span>' +
+              '</div>' +
+              '<p class="deck__text">' + escapeHtml(p.description) + '</p>' +
+            '</article>';
+          }).join('') +
+          '<div class="deck__nav">' +
+            posts.map(function (p, i) {
+              return '<button class="deck__dot" type="button" data-go="' + i +
+                     '" aria-label="Show post ' + (i + 1) + '"></button>';
+            }).join('') +
+          '</div>';
 
-        grid.hidden = false;
+        deck.hidden = false;
         if (empty) empty.remove();
 
-        grid.querySelectorAll('img').forEach(retryImage);
-
-        // Newly injected cards still need the scroll animations.
-        grid.querySelectorAll('.post').forEach(function (el) {
-          el.classList.add('anim-media', 'is-in', 'is-visible');
-        });
+        deck.querySelectorAll('img').forEach(retryImage);
+        runDeck(deck);
       })
       .catch(function () { /* leave the notice in place */ });
+  }
+
+  /* The stack itself. Each card is placed by its distance from the front, so
+     advancing is just a matter of renumbering and letting the transition run.
+     The card that leaves drops out of frame first, then rejoins at the back. */
+  function runDeck(deck) {
+    var cards = [].slice.call(deck.querySelectorAll('.deck__card'));
+    var dots = [].slice.call(deck.querySelectorAll('.deck__dot'));
+    var glow = deck.querySelector('.deck__glow');
+    var total = cards.length;
+    if (!total) return;
+
+    /* Offset, tilt and scale for the front card and the three behind it;
+       anything deeper is parked out of sight. */
+    var LAYOUT = [
+      { x: 0, y: 0, r: -2, s: 1, o: 1 },
+      { x: 24, y: -18, r: 5.5, s: .955, o: 1 },
+      { x: -20, y: -30, r: -7, s: .92, o: 1 },
+      { x: 8, y: -40, r: 2.5, s: .89, o: .85 }
+    ];
+    var GONE = { x: 0, y: -46, r: 0, s: .86, o: 0 };
+
+    var active = 0;
+    var timer = null;
+    var paused = false;
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function place(card, spot) {
+      card.style.transform =
+        'translate(calc(-50% + ' + spot.x + 'px), ' + spot.y + 'px) ' +
+        'rotate(' + spot.r + 'deg) scale(' + spot.s + ')';
+      card.style.opacity = spot.o;
+    }
+
+    function layout() {
+      cards.forEach(function (card, i) {
+        var depth = (i - active + total) % total;
+        card.dataset.depth = depth;
+        card.style.zIndex = total - depth;
+        card.setAttribute('aria-hidden', depth === 0 ? 'false' : 'true');
+        if (!card.classList.contains('is-leaving')) {
+          place(card, LAYOUT[depth] || GONE);
+        }
+      });
+
+      if (glow) {
+        glow.style.setProperty('--tint', cards[active].dataset.tint || 'rgba(212, 160, 23, .5)');
+      }
+      dots.forEach(function (dot, i) { dot.classList.toggle('is-on', i === active); });
+    }
+
+    /* Sending the front card away and bringing it back at the rear has to
+       happen in two steps: the drop is animated, the return to the back of the
+       stack is not — otherwise it would fly back across the card face. */
+    function go(next) {
+      if (next === active) return;
+      var leaving = next === (active + 1) % total ? cards[active] : null;
+      active = next;
+
+      if (leaving && !still) {
+        leaving.classList.add('is-leaving');
+        setTimeout(function () {
+          leaving.style.transition = 'none';
+          leaving.classList.remove('is-leaving');
+          leaving.style.filter = '';
+          place(leaving, LAYOUT[(cards.indexOf(leaving) - active + total) % total] || GONE);
+          // Two frames, so the snap is painted before transitions come back.
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { leaving.style.transition = ''; });
+          });
+        }, 620);
+      }
+      layout();
+    }
+
+    function next() { go((active + 1) % total); }
+
+    function start() {
+      if (still || total < 2) return;
+      stop();
+      timer = setInterval(function () { if (!paused) next(); }, 5200);
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    /* An average of the image gives the glow behind the stack its colour, so
+       the page picks up the tone of whichever post is in front. */
+    cards.forEach(function (card) {
+      var img = card.querySelector('img');
+      if (!img) return;
+      var sample = function () {
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 8;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 8, 8);
+          var d = ctx.getImageData(0, 0, 8, 8).data;
+          var r = 0, g = 0, b = 0, n = 0;
+          for (var i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+          card.dataset.tint = 'rgba(' + Math.round(r / n) + ',' + Math.round(g / n) + ',' +
+                              Math.round(b / n) + ',.72)';
+          if (cards[active] === card) layout();
+        } catch (e) { /* keep the default gold */ }
+      };
+      if (img.complete && img.naturalWidth) sample();
+      else img.addEventListener('load', sample);
+    });
+
+    deck.addEventListener('mouseenter', function () { paused = true; });
+    deck.addEventListener('mouseleave', function () { paused = false; });
+    deck.addEventListener('focusin', function () { paused = true; });
+    deck.addEventListener('focusout', function () { paused = false; });
+
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () { go(+dot.dataset.go); start(); });
+    });
+    deck.querySelectorAll('.deck__next').forEach(function (btn) {
+      btn.addEventListener('click', function (e) { e.stopPropagation(); next(); start(); });
+    });
+
+    /* Drag or swipe the front card far enough in any direction and it goes. */
+    var from = null;
+    deck.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.deck__next, .deck__dot')) return;
+      from = { x: e.clientX, y: e.clientY };
+    });
+    deck.addEventListener('pointerup', function (e) {
+      if (!from) return;
+      var moved = Math.abs(e.clientX - from.x) + Math.abs(e.clientY - from.y);
+      from = null;
+      if (moved > 48 || moved < 6) { next(); start(); }   // a swipe, or a plain click
+    });
+
+    layout();
+    start();
   }
 
   /* A post's text is live the moment it is committed, but its image is a static
@@ -759,7 +900,7 @@
     });
 
     document.querySelectorAll([
-      '.feature__media img', '.post img', '.role__media img', '.founder img',
+      '.feature__media img', '.role__media img', '.founder img',
       '.card__photo', '.month', '.card', '.role', '.career', '.price', '.tool',
       '.contact-tile', '.faq__item', '.blog-empty__icon', '.map',
       /* .stat and .cta-box are left out: they run their own arrival moves,
