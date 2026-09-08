@@ -426,12 +426,30 @@
         grid.hidden = false;
         if (empty) empty.remove();
 
+        grid.querySelectorAll('img').forEach(retryImage);
+
         // Newly injected cards still need the scroll animations.
         grid.querySelectorAll('.post').forEach(function (el) {
           el.classList.add('anim-media', 'is-in', 'is-visible');
         });
       })
       .catch(function () { /* leave the notice in place */ });
+  }
+
+  /* A post's text is live the moment it is committed, but its image is a static
+     file that only exists once that commit has redeployed — about a minute — so
+     it 404s until then. Retry on a widening delay so the card fills itself in
+     instead of leaving a broken icon nobody knows to refresh away. */
+  function retryImage(img) {
+    var tries = 0;
+    img.addEventListener('error', function () {
+      if (tries >= 4) { img.remove(); return; }
+      var wait = 8000 * Math.pow(2, tries);          // 8s, 16s, 32s, 64s
+      tries++;
+      setTimeout(function () {
+        img.src = img.src.split('?')[0] + '?r=' + Date.now();
+      }, wait);
+    });
   }
 
   /* ------------------------------------------------------------------- nav */

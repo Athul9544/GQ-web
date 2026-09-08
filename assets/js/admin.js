@@ -125,6 +125,21 @@
       '</article>';
     }).join('');
 
+    /* The thumbnail is the file just committed, which is not served until the
+       redeploy that commit triggered has finished. Retry rather than leaving
+       the operator looking at a broken image and assuming the upload failed. */
+    list.querySelectorAll('.post-row__thumb img').forEach(function (img) {
+      var tries = 0;
+      img.addEventListener('error', function () {
+        if (tries >= 4) return;
+        var wait = 8000 * Math.pow(2, tries);        // 8s, 16s, 32s, 64s
+        tries++;
+        setTimeout(function () {
+          img.src = img.src.split('?')[0] + '?r=' + Date.now();
+        }, wait);
+      });
+    });
+
     list.querySelectorAll('.post-row').forEach(function (row) {
       var post = posts.find(function (p) { return p.id === row.dataset.id; });
       row.querySelector('[data-act="edit"]').addEventListener('click', function () { openEditor(post); });
