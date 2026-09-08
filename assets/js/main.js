@@ -662,16 +662,34 @@
   function initReveal() {
     var nodes = document.querySelectorAll('.reveal');
     if (!nodes.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      nodes.forEach(function (n) { n.classList.add('is-visible'); });
+      return;
+    }
+
+    /* Threshold 0 with a margin off the bottom edge, rather than a fraction of
+       the element: a block taller than the viewport can never reach a large
+       ratio, which left tall sections stuck invisible on small screens. */
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
         entry.target.classList.add('is-visible');
         io.unobserve(entry.target);
       });
-    }, { threshold: .12 });
+    }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+
     nodes.forEach(function (n, i) {
       n.style.transitionDelay = (i % 4) * 80 + 'ms';
       io.observe(n);
+    });
+
+    // Anything already on screen should not wait for a scroll event.
+    requestAnimationFrame(function () {
+      nodes.forEach(function (n) {
+        var r = n.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) n.classList.add('is-visible');
+      });
     });
   }
 
