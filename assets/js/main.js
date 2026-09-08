@@ -408,16 +408,14 @@
         deck.innerHTML =
           '<div class="deck__glow"></div>' +
           posts.map(function (p) {
-            var date = new Date(p.createdAt).toLocaleDateString(undefined, {
-              year: 'numeric', month: 'short', day: 'numeric'
-            });
+            var date = postDate(p);
             var media = p.image
               ? '<img src="' + encodeURI(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
               : '';
 
             return '<article class="deck__card">' +
               '<span class="deck__tag">' + escapeHtml(p.category || 'Golden Qube') + '</span>' +
-              '<button class="deck__next" type="button" aria-label="Next post">' +
+              '<button class="deck__next" type="button" aria-label="Read this post">' +
                 '<svg width="14" height="14"><use href="#i-arrow"></use></svg>' +
               '</button>' +
               '<h3 class="deck__title">' + escapeHtml(p.title) + '</h3>' +
@@ -435,18 +433,76 @@
           '</div>';
 
         deck.hidden = false;
-        if (empty) empty.remove();
+        // The whole notice section goes, padding and all, not just the card.
+        var emptyWrap = document.getElementById('blog-empty-wrap');
+        if (emptyWrap) emptyWrap.remove();
+        else if (empty) empty.remove();
 
         deck.querySelectorAll('img').forEach(retryImage);
-        runDeck(deck);
+        runDeck(deck, posts);
       })
       .catch(function () { /* leave the notice in place */ });
   }
 
+  function postDate(p) {
+    return new Date(p.createdAt).toLocaleDateString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  }
+
+  /* A card shows three lines of its post; opening one lifts the whole thing
+     into a panel over the page. */
+  function openPost(post) {
+    var view = document.createElement('div');
+    view.className = 'post-view';
+    view.innerHTML =
+      '<div class="post-view__scrim" data-close></div>' +
+      '<article class="post-view__panel" role="dialog" aria-modal="true" aria-label="' +
+          escapeHtml(post.title) + '">' +
+        (post.image
+          ? '<img src="' + encodeURI(post.image) + '" alt="' + escapeHtml(post.title) + '">'
+          : '') +
+        '<button class="post-view__close" type="button" data-close aria-label="Close">&times;</button>' +
+        '<div class="post-view__body">' +
+          '<span class="post-view__meta">' + escapeHtml(post.category || 'Golden Qube') +
+            ' &nbsp;&bull;&nbsp; ' + postDate(post) + '</span>' +
+          '<h2>' + escapeHtml(post.title) + '</h2>' +
+          '<p>' + escapeHtml(post.description) + '</p>' +
+        '</div>' +
+      '</article>';
+
+    document.body.appendChild(view);
+    // The page behind is scroll-driven; freezing it keeps the deck put.
+    var scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbar > 0) document.body.style.paddingRight = scrollbar + 'px';
+
+    var img = view.querySelector('img');
+    if (img) retryImage(img);
+    view.querySelector('.post-view__close').focus();
+
+    function close() {
+      view.remove();
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape' || e.key === 'Esc') close(); }
+
+    view.addEventListener('click', function (e) {
+      if (e.target.hasAttribute('data-close')) close();
+    });
+    document.addEventListener('keydown', onKey);
+  }
+
   /* The stack itself. Each card is placed by its distance from the front, so
-     advancing is just a matter of renumbering and letting the transition run.
-     The card that leaves drops out of frame first, then rejoins at the back. */
-  function runDeck(deck) {
+     turning one over is a matter of renumbering and letting the transition run.
+     The card that leaves drops out of frame first, then rejoins at the back.
+
+     Which card is in front comes from the scroll position: the track around the
+     pinned stage is one screen tall per post, so scrolling deals them one by
+     one and the page continues to the footer once the last one is up. */
+  function runDeck(deck, posts) {
     var cards = [].slice.call(deck.querySelectorAll('.deck__card'));
     var dots = [].slice.call(deck.querySelectorAll('.deck__dot'));
     var glow = deck.querySelector('.deck__glow');
@@ -463,14 +519,13 @@
     ];
     var GONE = { x: 0, y: -46, r: 0, s: .86, o: 0 };
 
+    var track = document.getElementById('blog-track');
     var active = 0;
-    var timer = null;
-    var paused = false;
     var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function place(card, spot) {
       card.style.transform =
-        'translate(calc(-50% + ' + spot.x + 'px), ' + spot.y + 'px) ' +
+        'translate(calc(-50% + ' + spot.x + 'px), calc(-50% + ' + spot.y + 'px)) ' +
         'rotate(' + spot.r + 'deg) scale(' + spot.s + ')';
       card.style.opacity = spot.o;
     }
@@ -481,6 +536,8 @@
         card.dataset.depth = depth;
         card.style.zIndex = total - depth;
         card.setAttribute('aria-hidden', depth === 0 ? 'false' : 'true');
+        // Only the readable card takes the keyboard.
+        card.querySelector('.deck__next').tabIndex = depth === 0 ? 0 : -1;
         if (!card.classList.contains('is-leaving')) {
           place(card, LAYOUT[depth] || GONE);
         }
@@ -516,14 +573,45 @@
       layout();
     }
 
-    function next() { go((active + 1) % total); }
+    /* Every way of asking for another card goes through the scroll position,
+       so nothing can disagree with where the page actually is. */
+    function span() { return track ? track.offsetHeight - window.innerHeight : 0; }
 
-    function start() {
-      if (still || total < 2) return;
-      stop();
-      timer = setInterval(function () { if (!paused) next(); }, 5200);
+    function stepTo(i) {
+      if (!track || span() <= 0) { go(i); return; }
+      var top = window.pageYOffset + track.getBoundingClientRect().top +
+                span() * ((i + 0.5) / total);
+      if ('scrollBehavior' in document.documentElement.style) {
+        window.scrollTo({ top: top, behavior: still ? 'auto' : 'smooth' });
+      } else {
+        window.scrollTo(0, top);
+      }
     }
-    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(fromScroll);
+    }
+    function fromScroll() {
+      ticking = false;
+      var length = span();
+      if (length <= 0) return;
+      var p = -track.getBoundingClientRect().top / length;
+      if (p < 0) p = 0;
+      if (p > 1) p = 1;
+      var i = Math.floor(p * total);
+      if (i > total - 1) i = total - 1;
+      if (i !== active) go(i);
+    }
+
+    function sizeTrack() {
+      if (!track) return;
+      // A screen of scrolling per card, plus one for reading the last one.
+      track.style.height = (total + 1) * window.innerHeight + 'px';
+      fromScroll();
+    }
 
     /* An average of the image gives the glow behind the stack its colour, so
        the page picks up the tone of whichever post is in front. */
@@ -548,33 +636,44 @@
       else img.addEventListener('load', sample);
     });
 
-    deck.addEventListener('mouseenter', function () { paused = true; });
-    deck.addEventListener('mouseleave', function () { paused = false; });
-    deck.addEventListener('focusin', function () { paused = true; });
-    deck.addEventListener('focusout', function () { paused = false; });
-
     dots.forEach(function (dot) {
-      dot.addEventListener('click', function () { go(+dot.dataset.go); start(); });
-    });
-    deck.querySelectorAll('.deck__next').forEach(function (btn) {
-      btn.addEventListener('click', function (e) { e.stopPropagation(); next(); start(); });
+      dot.addEventListener('click', function () { stepTo(+dot.dataset.go); });
     });
 
-    /* Drag or swipe the front card far enough in any direction and it goes. */
+    // The arrow on the face of a card opens it; it is the card's own affordance.
+    cards.forEach(function (card, i) {
+      card.querySelector('.deck__next').addEventListener('click', function (e) {
+        e.stopPropagation();
+        openPost(posts[i]);
+      });
+    });
+
+    /* A tap on the readable card opens it, a tap on one behind brings it
+       forward, and a drag in any direction deals the next one. */
     var from = null;
     deck.addEventListener('pointerdown', function (e) {
       if (e.target.closest('.deck__next, .deck__dot')) return;
-      from = { x: e.clientX, y: e.clientY };
+      from = { x: e.clientX, y: e.clientY, card: e.target.closest('.deck__card') };
     });
     deck.addEventListener('pointerup', function (e) {
       if (!from) return;
-      var moved = Math.abs(e.clientX - from.x) + Math.abs(e.clientY - from.y);
+      var start = from;
       from = null;
-      if (moved > 48 || moved < 6) { next(); start(); }   // a swipe, or a plain click
+
+      if (Math.abs(e.clientX - start.x) + Math.abs(e.clientY - start.y) > 48) {
+        return stepTo((active + 1) % total);
+      }
+      if (!start.card) return;
+      var i = cards.indexOf(start.card);
+      if (i === active) openPost(posts[i]);
+      else if (i > -1) stepTo(i);
     });
 
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', sizeTrack);
+
     layout();
-    start();
+    sizeTrack();
   }
 
   /* A post's text is live the moment it is committed, but its image is a static

@@ -6,7 +6,7 @@
 <title>BLOG - Golden Qube Digital Marketing Academy</title>
 <meta name="description" content="Digital marketing insights, guides and updates from Golden Qube Digital Marketing Academy, Kochi.">
 <link rel="icon" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/style.css?v=svcstack72">
+<link rel="stylesheet" href="assets/css/style.css?v=svcstack73">
 </head>
 <body>
 
@@ -35,11 +35,18 @@
 </section>
 
 <!-- ===================================================== posts -->
-<section class="section">
-  <div class="container">
+<!-- The stage is pinned and the track is made tall by main.js, so scrolling
+     through the track deals the cards one at a time before the page moves on. -->
+<section class="deck-track" id="blog-track">
+  <div class="deck-stage">
+    <div class="container">
+      <div class="deck" id="blog-deck" hidden></div>
+    </div>
+  </div>
+</section>
 
-    <!-- Dealt from /api/posts by main.js; the notice below shows when empty. -->
-    <div class="deck" id="blog-deck" hidden></div>
+<section class="section" id="blog-empty-wrap">
+  <div class="container">
 
     <div class="blog-empty reveal" id="blog-empty">
       <span class="blog-empty__icon"><svg width="30" height="30"><use href="#i-quote"></use></svg></span>
@@ -126,6 +133,6 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=svcstack72"></script>
+<script src="assets/js/main.js?v=svcstack73"></script>
 </body>
 </html>

@@ -1078,13 +1078,25 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* Blog --------------------------------------------------------------------- */
 /* Blog deck ---------------------------------------------------------------- */
 /* Posts are dealt as a stack rather than laid out in a grid: the front card is
-   the one you read, the rest fan out behind it as frosted silhouettes, and the
-   deck advances on a timer, on a drag, or from the controls beneath it. */
+   the one you read and the rest fan out behind it as frosted silhouettes. The
+   track below is made tall by main.js and the stage inside it is pinned, so
+   scrolling through that height turns the cards over one at a time; past the
+   last card the pin releases and the page carries on to the footer. */
+.deck-track { position: relative; }
+.deck-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  align-items: center;
+}
+.deck-stage > .container { width: 100%; }
+
 .deck {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 660px;
+  height: min(700px, 88vh);
   padding-bottom: 60px;
   touch-action: pan-y;
   /* Tilted cards reach past the container on narrow screens. `clip` trims that
@@ -1114,23 +1126,22 @@ ul { margin: 0; padding: 0; list-style: none; }
    children opt out of `place-items` — every transform below carries the -50%. */
 .deck__card {
   position: absolute;
-  top: 44px;
+  top: 50%;
   left: 50%;
   display: flex;
   flex-direction: column;
   width: min(348px, 84vw);
-  aspect-ratio: 33 / 50;
+  height: min(527px, 74vh);
+  cursor: pointer;
   padding: 20px 20px 22px;
   border-radius: 26px;
   background: #14151a;
   color: #fff;
   box-shadow: 0 30px 60px rgba(16, 18, 28, .26);
   overflow: hidden;
-  cursor: grab;
   transition: transform .75s cubic-bezier(.22, .85, .25, 1), opacity .6s ease, filter .6s ease;
   will-change: transform;
 }
-.deck__card:active { cursor: grabbing; }
 
 /* Everything but the front card reads as a pale silhouette, so the stack has
    depth without competing for attention. */
@@ -1148,7 +1159,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* Leaving the stack: the card drops toward the reader and blurs out. */
 .deck__card.is-leaving {
-  transform: translate(calc(-50% - 6px), 190px) rotate(6deg) scale(.98);
+  transform: translate(calc(-50% - 6px), calc(-50% + 190px)) rotate(6deg) scale(.98);
   opacity: 0;
   filter: blur(9px);
 }
@@ -1256,6 +1267,80 @@ ul { margin: 0; padding: 0; list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   .deck__card { transition: none; }
   .deck__card.is-leaving { display: none; }
+}
+
+/* Post detail --------------------------------------------------------------
+   A card only shows three lines of its post, so opening one lifts the whole
+   thing into a panel over the page. */
+.post-view {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.post-view__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 13, 18, .62);
+  backdrop-filter: blur(4px);
+  animation: pv-fade .3s ease both;
+}
+.post-view__panel {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 40px 90px rgba(12, 13, 18, .35);
+  animation: pv-rise .45s cubic-bezier(.22, .85, .25, 1) both;
+}
+.post-view__panel img {
+  width: 100%;
+  height: clamp(200px, 34vh, 340px);
+  object-fit: cover;
+  display: block;
+}
+.post-view__body { padding: 32px clamp(22px, 4vw, 40px) 40px; }
+.post-view__meta {
+  display: block;
+  margin-bottom: 12px;
+  font-size: .78rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #8a90a3;
+}
+.post-view__body h2 { margin-bottom: 16px; font-size: clamp(1.5rem, 3.4vw, 2.1rem); }
+.post-view__body p { white-space: pre-wrap; }
+.post-view__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(12, 13, 18, .55);
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .25s;
+}
+.post-view__close:hover { background: var(--gold); color: #14151a; }
+
+@keyframes pv-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pv-rise {
+  from { opacity: 0; transform: translateY(26px) scale(.97); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-view__scrim, .post-view__panel { animation: none; }
 }
 
 /* Blog empty state --------------------------------------------------------- */
