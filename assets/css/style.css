@@ -1516,6 +1516,14 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .contact-aside { padding: 30px 26px; }
 }
 
+@media (max-width: 700px) {
+  /* Phones keep the brand blurb and Quick Links; Our Services and Contact are
+     dropped, since both repeat links and details found elsewhere on the page. */
+  .footer__col:nth-child(3),
+  .footer__col:nth-child(4) { display: none; }
+  .footer__mark { font-size: clamp(2.4rem, 15.5vw, 10rem); }
+}
+
 @media (max-width: 640px) {
   .grid--4 { grid-template-columns: 1fr; }
   .stats { grid-template-columns: 1fr 1fr; }
@@ -1874,9 +1882,9 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .dmapt-panel__inner { padding: 24px; gap: 18px; }
 }
 
-/* Below the accordion's comfortable width the panels stack and all of them
-   read as open. */
-@media (max-width: 900px) {
+/* Motion off: the panels stack and all of them read as open. Phones keep the
+   sideways accordion — it is sized down in the points band instead. */
+@media (prefers-reduced-motion: reduce) {
   .dmapt-acc { flex-direction: column; gap: 14px; }
   .dmapt-panel,
   .dmapt-panel.is-open {
@@ -2359,16 +2367,21 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .gz__pts.pts--wipe .wipe__text { font-size: .74rem; margin-top: 6px; }
   .gz__pts.pts--wipe .wipe__blob { right: 12px; bottom: 12px; width: 26px; height: 26px; }
 
-  .gz__pts.dmapt-acc { gap: 8px; }
-  .gz__pts.dmapt-acc .dmapt-panel { height: 26vh; flex-basis: 60px; min-width: 60px; }
-  .gz__pts.dmapt-acc .dmapt-panel__inner { padding: 14px; gap: 12px; }
-  .gz__pts.dmapt-acc .dmapt-panel__main { flex-basis: 150px; width: 150px; }
-  .gz__pts.dmapt-acc .dmapt-panel__icon { width: 32px; height: 32px; margin-bottom: 8px; border-radius: 10px; }
-  .gz__pts.dmapt-acc .dmapt-panel__title { font-size: .95rem; }
+  .gz__pts.dmapt-acc { flex-direction: row; gap: 8px; }
+  /* Wide enough closed that the title still reads, which is what the closed
+     panel shows on a desktop too. */
+  .gz__pts.dmapt-acc .dmapt-panel { height: 26vh; flex-basis: 74px; min-width: 74px; }
+  .gz__pts.dmapt-acc .dmapt-panel:not(.is-open) .dmapt-panel__title { font-size: .78rem; }
+  .gz__pts.dmapt-acc .dmapt-panel__inner { padding: 12px; gap: 0; }
+  /* The open panel is only about 220px across here, so the copy takes all of
+     it and the photo sits this one out. */
+  .gz__pts.dmapt-acc .dmapt-panel__main { flex: 1 1 auto; width: auto; }
+  .gz__pts.dmapt-acc .dmapt-panel__media { display: none; }
+  .gz__pts.dmapt-acc .dmapt-panel__icon { width: 30px; height: 30px; margin-bottom: 8px; border-radius: 9px; }
+  .gz__pts.dmapt-acc .dmapt-panel__title { font-size: .95rem; margin-bottom: .3rem; }
   .gz__pts.dmapt-acc .dmapt-panel__text { font-size: .74rem; line-height: 1.45; }
   .gz__pts.dmapt-acc .dmapt-panel__foot { padding-top: 8px; }
   .gz__pts.dmapt-acc .dmapt-panel__arrow { width: 30px; height: 30px; }
-  .gz__pts.dmapt-acc .dmapt-panel__media { min-width: 0; flex-basis: 90px; }
 }
 
 /* Motion off: no pin and no sideways travel — the panels follow one another. */
