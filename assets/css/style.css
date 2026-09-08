@@ -1845,12 +1845,13 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .footer__col:nth-child(3),
   .footer__col:nth-child(4) { display: none; }
   /* Bleeds past the container's 20px gutters so the wordmark can run the full
-     width of the phone, which is what lets it be set larger and still fit on
-     one line. */
+     width of the phone. The size here is only an upper bound — main.js measures
+     the line and scales it down to fit exactly, so it fills the width without
+     ever losing its last letters. */
   .footer__mark {
     margin-left: -20px;
     margin-right: -20px;
-    font-size: clamp(2.9rem, 17.6vw, 10rem);
+    font-size: clamp(2.9rem, 19vw, 10rem);
   }
 }
 

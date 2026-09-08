@@ -122,6 +122,34 @@
         });
       })(marks[i]);
     }
+
+    /* The wordmark is one unbroken line, so any size that is even slightly too
+       big loses letters off the end — "GOLDEN QU". Rather than guess a font
+       size in vw that happens to fit, measure what the line actually needs and
+       scale to that, which also means it fills the width exactly. */
+    function fit() {
+      for (var i = 0; i < marks.length; i++) {
+        var el = marks[i];
+        el.style.fontSize = '';                       // back to the CSS size
+        var room = el.clientWidth;
+        var needed = el.scrollWidth;
+        if (!room || !needed || needed <= room) continue;
+        var size = parseFloat(window.getComputedStyle(el).fontSize);
+        el.style.fontSize = (size * room / needed * 0.995).toFixed(2) + 'px';
+      }
+    }
+
+    var queued = false;
+    function refit() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(function () { queued = false; fit(); });
+    }
+
+    fit();
+    window.addEventListener('resize', refit);
+    // Web fonts land after this runs and change the metrics underneath it.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   }
 
   /* --------------------------------------------------- horizontal hand-off */
