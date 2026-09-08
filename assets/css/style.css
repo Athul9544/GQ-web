@@ -375,7 +375,25 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 
 /* Nothing to cross over when the cards are stacked; show them in order. */
-@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+/* Phones keep the crossover; the travel is scaled to the smaller frame so the
+   leaving card still clears the screen. */
+@media (max-width: 900px) {
+  .ctax__card { width: calc(100vw - 32px); }
+  .ctax__card--front {
+    transform:
+      translate(calc(var(--p) * 74vw), calc(var(--p) * 12vh))
+      rotate(calc(var(--p) * 7deg))
+      scale(calc(1 - .14 * var(--p)));
+  }
+  .ctax__card--back {
+    transform:
+      translate(calc((1 - var(--p)) * -11vw), calc((1 - var(--p)) * -3vh))
+      scale(calc(.84 + .16 * var(--p)));
+  }
+}
+
+/* Motion off: the two cards simply follow one another. */
+@media (prefers-reduced-motion: reduce) {
   .ctax { height: auto; padding: 0 20px; }
   .ctax__stage {
     position: static;
@@ -1705,9 +1723,10 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* No sticky pile on short viewports or for reduced motion — the cards simply
    flow one after another. */
-@media (max-height: 620px), (max-width: 760px) {
-  .svc-card { position: static; transform: none; }
-  .svc-card::after { display: none; }
+/* Phones keep the stack; only the offsets and padding shrink. */
+@media (max-width: 760px) {
+  .svc-card { top: calc(92px + var(--svc-i) * 12px); }
+  .svc-card + .svc-card { margin-top: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .svc-card { transform: none; transition: none; }
@@ -2030,7 +2049,18 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* Without hover the reveal can never happen, so the rows settle into a plain
    portrait-beside-name layout with everything already visible. */
-@media (max-width: 860px), (hover: none) {
+/* A tap stands in for hover where there is no pointer, so the portrait still
+   opens out of the name rather than sitting there already shown. */
+.team-row.is-lit .team-row__name { color: var(--gold-dark); }
+.team-row.is-lit .team-row__photo { width: var(--team-w); margin: 0 22px; }
+.team-row.is-lit .team-row__meta {
+  opacity: 1;
+  transform: translate(0, -50%);
+  transition-delay: .12s;
+}
+
+/* Narrower than the reveal needs: the row stacks and shows everything. */
+@media (max-width: 700px) {
   .team-row__inner {
     justify-content: flex-start;
     gap: 6px;
@@ -2039,7 +2069,8 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
     flex-wrap: wrap;
   }
   .team-row__photo,
-  .team-row:hover .team-row__photo {
+  .team-row:hover .team-row__photo,
+  .team-row.is-lit .team-row__photo {
     order: -1;
     width: 122px;
     height: 152px;
@@ -2049,7 +2080,8 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .team-row__name { font-size: clamp(1.5rem, 6vw, 2rem); }
   .team-row__name + .team-row__photo + .team-row__name { margin-left: .35em; }
   .team-row__meta,
-  .team-row:hover .team-row__meta {
+  .team-row:hover .team-row__meta,
+  .team-row.is-lit .team-row__meta {
     position: static;
     flex: 1 1 100%;
     width: auto;
@@ -2192,7 +2224,40 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* Below the two-column width there is nothing to zoom into, so the block is
    served as an ordinary stacked feature. */
-@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+/* Phones run the same zoom; only the landing changes — the photo comes to rest
+   across the full width with the copy beneath it rather than beside it, since
+   there is no second column to land in. */
+@media (max-width: 900px) {
+  .gz__inner {
+    --gz-inner: calc(100vw - 32px);
+    --gz-col: var(--gz-inner);
+    --gz-left: 16px;
+    --gz-h: 32vh;
+    --gz-top: 11vh;
+  }
+  /* One column, so neither variant offsets sideways. */
+  .gz--flip .gz__frame { left: calc(var(--gz-left) * var(--p)); }
+  .gz__body,
+  .gz--flip .gz__body {
+    left: var(--gz-left);
+    right: var(--gz-left);
+    /* Rides the photo's own animated bottom edge, so the copy never sits over
+       the frame while it is still shrinking. */
+    top: calc(
+      var(--gz-top) * var(--p)
+      + (100vh - (100vh - var(--gz-h)) * var(--p))
+      + 18px
+    );
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+  .gz__body h2 { font-size: clamp(1.35rem, 5.4vw, 1.8rem); }
+  .gz__body p { font-size: .9rem; line-height: 1.6; }
+}
+
+/* Motion off: no pin, no zoom — the photo is served at its resting size. */
+@media (prefers-reduced-motion: reduce) {
   .gz { height: auto; padding: 0 20px; }
   .container + .gz { margin-top: 60px; }
   .gz__stage { position: static; height: auto; overflow: visible; }
@@ -2283,7 +2348,66 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* No sideways travel on narrow screens — the points and the next section
    simply follow one another, and the photo is served at its resting size. */
-@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+/* Phones keep the sideways hand-off exactly as it is — a 200vw track sliding
+   one screen — and only the panel contents are resized to fit. */
+@media (max-width: 900px) {
+  .gz--pts .gz__inner {
+    --gz-h: 23vh;
+    --gz-top: 9vh;
+  }
+  .gz--pts .gz__body {
+    top: calc(
+      var(--gz-top) * var(--p)
+      + (100vh - (100vh - var(--gz-h)) * var(--p))
+      + 14px
+    );
+    height: auto;
+  }
+  .gz--pts .gz__body h2 { font-size: clamp(1.15rem, 4.6vw, 1.5rem); margin-bottom: .35em; }
+  .gz--pts .gz__body p { font-size: .8rem; line-height: 1.5; }
+  .gz--pts .gz__body .eyebrow { margin-bottom: 8px; padding: 4px 12px; font-size: .66rem; }
+
+  .gz__pts {
+    left: 16px;
+    right: 16px;
+    bottom: 3vh;
+  }
+  .gz__pts .pts__lead { margin-bottom: 8px; font-size: .92rem; }
+  /* Each card model shrinks into the band rather than stacking out of it. */
+  .gz__pts .pts__row { height: 26vh; }
+  .gz__pts .blade { flex-basis: 54px; min-width: 54px; }
+  .gz__pts .blade__edge { left: 20px; bottom: 20px; font-size: .8rem; }
+  .gz__pts .blade__open { padding: 16px; }
+  .gz__pts .blade__title { font-size: 1rem; margin-bottom: 6px; }
+  .gz__pts .blade__text { font-size: .76rem; line-height: 1.45; }
+
+  .gz__pts.pts--turn,
+  .gz__pts.pts--wipe { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .gz__pts.pts--turn .turn { min-height: 12.5vh; }
+  .gz__pts.pts--turn .turn__face { padding: 14px; border-radius: 14px; }
+  .gz__pts.pts--turn .turn__title { font-size: .88rem; }
+  .gz__pts.pts--turn .turn__mark { width: 24px; height: 24px; }
+  .gz__pts.pts--turn .turn__text { font-size: .76rem; line-height: 1.45; }
+
+  .gz__pts.pts--wipe .wipe { min-height: 12.5vh; padding: 14px; border-radius: 14px; }
+  .gz__pts.pts--wipe .wipe__title { font-size: .88rem; }
+  .gz__pts.pts--wipe .wipe__text { font-size: .74rem; margin-top: 6px; }
+  .gz__pts.pts--wipe .wipe__blob { right: 12px; bottom: 12px; width: 26px; height: 26px; }
+
+  .gz__pts.dmapt-acc { gap: 8px; }
+  .gz__pts.dmapt-acc .dmapt-panel { height: 26vh; flex-basis: 60px; min-width: 60px; }
+  .gz__pts.dmapt-acc .dmapt-panel__inner { padding: 14px; gap: 12px; }
+  .gz__pts.dmapt-acc .dmapt-panel__main { flex-basis: 150px; width: 150px; }
+  .gz__pts.dmapt-acc .dmapt-panel__icon { width: 32px; height: 32px; margin-bottom: 8px; border-radius: 10px; }
+  .gz__pts.dmapt-acc .dmapt-panel__title { font-size: .95rem; }
+  .gz__pts.dmapt-acc .dmapt-panel__text { font-size: .74rem; line-height: 1.45; }
+  .gz__pts.dmapt-acc .dmapt-panel__foot { padding-top: 8px; }
+  .gz__pts.dmapt-acc .dmapt-panel__arrow { width: 30px; height: 30px; }
+  .gz__pts.dmapt-acc .dmapt-panel__media { min-width: 0; flex-basis: 90px; }
+}
+
+/* Motion off: no pin and no sideways travel — the panels follow one another. */
+@media (prefers-reduced-motion: reduce) {
   .hs { height: auto; padding-bottom: 0; }
   .hs__stage { position: static; height: auto; overflow: visible; }
   .hs__track { display: block; width: auto; transform: none; }
@@ -2595,7 +2719,18 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* Blades need width to open into; below that they stack as plain cards with
    everything already showing. Lift cards do the same where there is no hover. */
+/* Phones keep the sideways blades; they just start narrower. */
 @media (max-width: 760px) {
+  .pts--blade .pts__row { gap: 8px; height: 240px; }
+  .blade { flex-basis: 50px; min-width: 50px; border-radius: 14px; }
+  .blade__edge { left: 18px; bottom: 18px; font-size: .78rem; }
+  .blade__open { padding: 16px; }
+  .blade__title { font-size: 1.05rem; }
+  .blade__text { font-size: .78rem; line-height: 1.45; }
+}
+
+/* Motion off: the blades lie flat with their copy already showing. */
+@media (prefers-reduced-motion: reduce) {
   .pts--blade .pts__row { flex-direction: column; height: auto; gap: 12px; }
   .blade,
   .blade.is-active {
@@ -2610,21 +2745,17 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* Without hover the flood can never happen, so the cards are simply served
    already flooded. */
-@media (max-width: 640px), (hover: none) {
-  .pts--wipe { grid-template-columns: 1fr; }
-  .wipe {
-    min-height: 0;
-    padding: 22px;
-    border-color: rgba(212, 160, 23, .55);
-    background: linear-gradient(135deg, #d4a017 0%, #f5c542 100%);
-  }
-  .wipe__blob { display: none; }
-  .wipe__text { opacity: 1; transform: none; }
+/* A tap stands in for hover where there is no pointer, so the flood still
+   plays rather than the card being served already lit. */
+.wipe.is-lit {
+  border-color: var(--ink);
+  box-shadow: var(--shadow);
 }
-
-@media (max-width: 560px) {
-  .pts--turn { grid-template-columns: 1fr; }
-  .turn { min-height: 158px; }
+.wipe.is-lit .wipe__blob { transform: scale(18); }
+.wipe.is-lit .wipe__text {
+  opacity: 1;
+  transform: none;
+  transition-delay: .22s;
 }
 
 /* A card that has to be turned over is a poor deal when the motion is off, so
@@ -2647,6 +2778,4 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   }
   .turn__front { border-radius: 20px 20px 0 0; }
   .turn__back { border-radius: 0 0 20px 20px; border-top: 0; transform: none; }
-}
-
 }

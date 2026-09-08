@@ -233,6 +233,7 @@
   function initPointGroups() {
     initBlades();
     initTurnCards();
+    initTapReveals();
   }
 
   function initBlades() {
@@ -243,12 +244,9 @@
         var cards = group.querySelectorAll('.blade');
         if (cards.length < 2) return;
 
-        var flat = window.matchMedia('(max-width: 760px)');
         var hoverable = window.matchMedia('(hover: hover) and (pointer: fine)');
 
         function open(card) {
-          // Blades collapse into plain cards on narrow screens.
-          if (flat.matches) return;
           if (card.classList.contains('is-active')) return;
           for (var i = 0; i < cards.length; i++) {
             var on = cards[i] === card;
@@ -268,6 +266,29 @@
         }
       })(groups[g]);
     }
+  }
+
+  /* Wipe cards and team rows light on hover, which a finger cannot do. On a
+     touch device a tap sets the same state so the animation still plays. */
+  function initTapReveals() {
+    if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+    var groups = [
+      document.querySelectorAll('.wipe'),
+      document.querySelectorAll('.team-row')
+    ];
+
+    groups.forEach(function (nodes) {
+      for (var i = 0; i < nodes.length; i++) {
+        (function (el) {
+          el.addEventListener('click', function () {
+            var lit = el.classList.contains('is-lit');
+            for (var j = 0; j < nodes.length; j++) nodes[j].classList.remove('is-lit');
+            if (!lit) el.classList.add('is-lit');
+          });
+        })(nodes[i]);
+      }
+    });
   }
 
   function initTurnCards() {
@@ -299,11 +320,10 @@
     var panels = acc.querySelectorAll('.dmapt-panel');
     if (!panels.length) return;
 
-    var stacked = window.matchMedia('(max-width: 900px)');
     var hoverable = window.matchMedia('(hover: hover) and (pointer: fine)');
 
     function open(panel) {
-      if (stacked.matches || panel.classList.contains('is-open')) return;
+      if (panel.classList.contains('is-open')) return;
       for (var i = 0; i < panels.length; i++) {
         var on = panels[i] === panel;
         panels[i].classList.toggle('is-open', on);
