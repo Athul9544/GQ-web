@@ -321,10 +321,70 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .cta-box:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .cta-box:hover::before { background: linear-gradient(160deg, rgba(13, 17, 32, .64) 0%, rgba(13, 17, 32, .9) 100%); }
-.cta-box__body { position: relative; }
+.cta-box__body { position: relative; z-index: 2; }
 .cta-box h3 { color: #fff; }
 .cta-box p { color: rgba(255, 255, 255, .78); font-size: .95rem; margin-bottom: 1.4rem; }
 .cta-box .eyebrow { background: rgba(212, 160, 23, .22); color: var(--gold-light); }
+
+/* CTA pair — each card arrives with its own move, one after the other ------ */
+.cta-pair { perspective: 1400px; }
+
+.cta-box--rise,
+.cta-box--swing {
+  opacity: 0;
+  /* Held until the pair is in view, then released in order. */
+  transition:
+    opacity .8s cubic-bezier(.22, .68, .28, 1),
+    transform .9s cubic-bezier(.22, .68, .28, 1),
+    box-shadow .35s ease;
+}
+
+/* First card: lifts up out of the floor. */
+.cta-box--rise { transform: translateY(64px) scale(.96); }
+
+/* Second card: swings open on its left edge, a beat later. */
+.cta-box--swing {
+  transform-origin: 0 50%;
+  transform: rotateY(22deg) translateX(40px);
+  transition-delay: .26s;
+}
+
+.cta-pair.is-in .cta-box--rise,
+.cta-pair.is-in .cta-box--swing {
+  opacity: 1;
+  transform: none;
+}
+
+/* A gold sheen that unrolls across the card once it has landed. */
+.cta-box__sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(212, 160, 23, 0) 30%, rgba(212, 160, 23, .3) 50%, rgba(212, 160, 23, 0) 70%);
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+.cta-pair.is-in .cta-box__sheen {
+  transition: transform 1.5s cubic-bezier(.32, .06, .2, 1);
+  transform: translateX(110%);
+}
+.cta-box--rise .cta-box__sheen { transition-delay: .5s; }
+.cta-box--swing .cta-box__sheen { transition-delay: .8s; }
+
+/* The hover lift has to restate the landed transform, or it would fight the
+   arrival move above. */
+.cta-pair.is-in .cta-box:hover { transform: translateY(-6px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-box--rise,
+  .cta-box--swing {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .cta-box__sheen { display: none; }
+}
 .card__link { font-weight: 700; font-size: .9rem; display: inline-flex; align-items: center; gap: 8px; }
 .card__link:hover { gap: 12px; }
 
@@ -380,10 +440,103 @@ ul { margin: 0; padding: 0; list-style: none; }
 .checklist span.txt { font-size: .93rem; }
 
 /* Stats -------------------------------------------------------------------- */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; }
-.stat { text-align: center; padding: 34px 18px; border-radius: var(--radius); background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .09); }
-.stat strong { display: block; font-size: 2.6rem; font-weight: 800; color: var(--gold); line-height: 1; }
-.stat span { display: block; margin-top: 10px; font-size: .95rem; color: rgba(255, 255, 255, .7); }
+/* Stats band --------------------------------------------------------------- */
+/* A gold glow behind the figures, an oversized ghost of each number, and a
+   rule that draws itself in as the tile arrives. The count-up itself is the
+   existing [data-count] behaviour in main.js. */
+.stats-band {
+  position: relative;
+  overflow: hidden;
+}
+.stats-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 90% at 18% 0%, rgba(212, 160, 23, .22), transparent 70%),
+    radial-gradient(50% 80% at 88% 100%, rgba(212, 160, 23, .14), transparent 70%);
+  pointer-events: none;
+}
+.stats-band .container { position: relative; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+
+.stat {
+  position: relative;
+  overflow: hidden;
+  padding: 40px 26px 34px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(255, 255, 255, .1);
+  transition: transform .45s cubic-bezier(.22, .68, .28, 1), background .45s ease, border-color .45s ease;
+}
+.stat:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, .07);
+  border-color: rgba(212, 160, 23, .45);
+}
+
+/* Oversized watermark of the same figure, sitting behind it. */
+.stat__ghost {
+  position: absolute;
+  right: -6px;
+  top: -18px;
+  color: rgba(255, 255, 255, .05);
+  font-size: 6.4rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.05em;
+  pointer-events: none;
+  transition: color .45s ease, transform .6s cubic-bezier(.22, .68, .28, 1);
+}
+.stat:hover .stat__ghost {
+  color: rgba(212, 160, 23, .16);
+  transform: translateY(4px);
+}
+
+.stat strong {
+  position: relative;
+  display: block;
+  color: var(--gold);
+  font-size: clamp(2.4rem, 4vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+  position: relative;
+  display: block;
+  margin-top: 12px;
+  color: rgba(255, 255, 255, .74);
+  font-size: .95rem;
+  line-height: 1.5;
+}
+
+/* Draws across the foot of the tile once the tile has been revealed. */
+.stat__rule {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  bottom: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(212, 160, 23, 0));
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform .9s cubic-bezier(.22, .68, .28, 1);
+  transition-delay: calc(var(--stat-i, 0) * 110ms + 180ms);
+}
+.stat.is-visible .stat__rule { transform: scaleX(1); }
+
+/* Stagger the tiles as the row arrives. */
+.stat.reveal { transition-delay: calc(var(--stat-i, 0) * 110ms); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat, .stat__ghost, .stat__rule { transition: none; }
+  .stat__rule { transform: scaleX(1); }
+}
 
 /* Founders ----------------------------------------------------------------- */
 .founder { text-align: center; padding: 0 0 30px; border-radius: var(--radius); background: #fff; border: 1px solid var(--line); overflow: hidden; transition: transform .25s, box-shadow .25s; }
@@ -954,14 +1107,21 @@ ul { margin: 0; padding: 0; list-style: none; }
   margin-left: auto;
   border: 0;
   border-radius: 50%;
-  background: var(--gold);
-  color: #1a1400;
+  /* The mark is supplied on an opaque ink ground, so the button takes the
+     same colour and the logo reads as part of the circle. */
+  background: var(--ink);
+  color: #fff;
   cursor: pointer;
   box-shadow: 0 10px 28px rgba(212, 160, 23, .45);
-  transition: transform .2s, background .2s;
+  transition: transform .2s, box-shadow .2s;
 }
-.chatbot__launch:hover { transform: scale(1.06); background: var(--gold-light); }
-.chatbot__launch svg { position: absolute; transition: opacity .2s, transform .2s; }
+.chatbot__launch:hover {
+  transform: scale(1.06);
+  box-shadow: 0 14px 34px rgba(212, 160, 23, .6);
+}
+.chatbot__launch svg,
+.chatbot__launch img { position: absolute; transition: opacity .2s, transform .2s; }
+img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 .chatbot__icon-close { opacity: 0; transform: rotate(-90deg); }
 .chatbot.is-open .chatbot__icon-open { opacity: 0; transform: rotate(90deg); }
 .chatbot.is-open .chatbot__icon-close { opacity: 1; transform: none; }
@@ -1003,9 +1163,11 @@ ul { margin: 0; padding: 0; list-style: none; }
   height: 36px;
   flex: none;
   border-radius: 50%;
-  background: var(--gold);
-  color: #1a1400;
+  background: var(--ink);
+  color: #fff;
+  overflow: hidden;
 }
+.chatbot__avatar img { width: 24px; height: 24px; object-fit: contain; }
 .chatbot__x {
   margin-left: auto;
   display: grid;
@@ -1110,6 +1272,24 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .chatbot__form button:hover { background: var(--gold-light); }
 
+/* Hand-off to a real conversation, under the composer. */
+.chatbot__wa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+  background: #25d366;
+  color: #05330f;
+  font-size: .88rem;
+  font-weight: 700;
+  border-radius: 0 0 16px 16px;
+  transition: background .2s;
+}
+.chatbot__wa:hover { background: #1fbb59; color: #05330f; }
+.chatbot__wa svg { flex: none; }
+
 @media (max-width: 420px) {
   .chatbot { right: 16px; bottom: 16px; }
   .chatbot__panel { width: calc(100vw - 32px); }
@@ -1207,4 +1387,1049 @@ ul { margin: 0; padding: 0; list-style: none; }
   .footer__bottom { justify-content: center; text-align: center; }
   .cta-box { padding: 32px 24px; min-height: 290px; }
   .counter-badge { right: 10px; bottom: -14px; padding: 16px 20px; }
+}
+
+/* ==========================================================================
+   Services — stacked scroll cards
+   Each card sticks below the header while the next one slides over it. The
+   card underneath is scaled down and dimmed by main.js (--svc-p, 0 → 1) so
+   the pile reads as depth rather than a flat overlap.
+   ========================================================================== */
+.svc { padding-bottom: 40px; }
+.svc .sec-head--stack { max-width: 820px; margin-bottom: 46px; }
+.svc-head__muted { color: var(--body); font-weight: 800; }
+
+.svc-stack { padding-bottom: 12vh; }
+
+.svc-card {
+  --svc-p: 0;
+  position: sticky;
+  top: calc(102px + var(--svc-i) * 20px);
+  z-index: calc(1 + var(--svc-i));
+  overflow: hidden;
+  padding: 44px 46px 40px;
+  border-radius: 26px;
+  background: var(--svc-bg);
+  color: var(--svc-dim);
+  box-shadow: 0 30px 70px rgba(13, 17, 32, .22);
+  transform: scale(calc(1 - .05 * var(--svc-p)));
+  transform-origin: 50% 0;
+  transition: transform .18s linear;
+  will-change: transform;
+}
+.svc-card + .svc-card { margin-top: 30px; }
+
+/* Dimming veil for the card being covered. */
+.svc-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #05070f;
+  opacity: calc(.5 * var(--svc-p));
+  pointer-events: none;
+  transition: opacity .18s linear;
+}
+
+.svc-card__num {
+  position: absolute;
+  top: 40px;
+  right: 46px;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--svc-dim);
+  opacity: .75;
+}
+
+.svc-card__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 22px;
+  border-radius: 15px;
+  background: var(--svc-chip);
+  border: 1px solid var(--svc-hair);
+  color: var(--svc-fg);
+}
+
+.svc-card__title {
+  max-width: 20ch;
+  margin: 0 0 .7rem;
+  color: var(--svc-fg);
+  font-size: clamp(1.6rem, 2.7vw, 2.3rem);
+  letter-spacing: -.025em;
+}
+.svc-card__lede {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--svc-dim);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.svc-card__bottom {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(300px, 1.15fr);
+  align-items: end;
+  gap: 34px;
+  margin-top: 38px;
+  padding-top: 30px;
+  border-top: 1px solid var(--svc-hair);
+}
+
+.svc-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0 0 22px;
+}
+.svc-card__tags li {
+  padding: 7px 15px;
+  border: 1px solid var(--svc-hair);
+  border-radius: 999px;
+  background: var(--svc-chip);
+  color: var(--svc-fg);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.svc-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 26px;
+  border: 1px solid var(--svc-hair);
+  border-radius: 999px;
+  background: var(--svc-chip);
+  color: var(--svc-fg);
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  transition: gap .25s, background .25s, color .25s, border-color .25s;
+}
+.svc-card__cta:hover {
+  gap: 16px;
+  background: var(--svc-fg);
+  border-color: var(--svc-fg);
+  color: var(--svc-bg-contrast, #0d1120);
+}
+.svc-card:last-child .svc-card__cta:hover { color: #f5c542; }
+
+.svc-card__media {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.svc-card__media img {
+  width: 100%;
+  height: 132px;
+  border-radius: 14px;
+  border: 1px solid var(--svc-hair);
+  object-fit: cover;
+  transition: transform .45s cubic-bezier(.22, .68, .28, 1), box-shadow .45s;
+}
+.svc-card__media img:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 18px 36px rgba(5, 7, 15, .35);
+}
+
+@media (max-width: 980px) {
+  .svc-card { padding: 34px 28px 32px; border-radius: 22px; }
+  .svc-card__num { top: 30px; right: 28px; }
+  .svc-card__bottom { grid-template-columns: 1fr; align-items: start; gap: 24px; }
+  .svc-card__media img { height: 108px; }
+}
+
+@media (max-width: 640px) {
+  .svc-card__media { gap: 10px; }
+  .svc-card__media img { height: 84px; border-radius: 11px; }
+  .svc-card__lede { font-size: .95rem; }
+}
+
+/* No sticky pile on short viewports or for reduced motion — the cards simply
+   flow one after another. */
+@media (max-height: 620px), (max-width: 760px) {
+  .svc-card { position: static; transform: none; }
+  .svc-card::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-card { transform: none; transition: none; }
+  .svc-card::after { display: none; }
+  .svc-card__media img { transition: none; }
+}
+
+/* ==========================================================================
+   DMAPT — expanding accordion
+   Three panels sit side by side; the active one grows and reveals its copy
+   and photo. The text column is a fixed width and the panel clips its
+   overflow, so opening is a clean wipe with no reflow of the wording.
+   ========================================================================== */
+.dmapt-acc {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.dmapt-panel {
+  flex: 0 1 300px;
+  min-width: 300px;
+  flex-grow: 0;
+  overflow: hidden;
+  height: 316px;
+  padding: 0;
+  border: 1px solid rgba(212, 160, 23, .22);
+  border-radius: 20px;
+  background: rgba(212, 160, 23, .13);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    flex-grow .62s cubic-bezier(.22, .68, .28, 1),
+    background .45s ease,
+    border-color .45s ease,
+    box-shadow .45s ease;
+}
+.dmapt-panel:focus-visible { outline: 3px solid var(--gold-dark); outline-offset: 3px; }
+
+/* Soft watermark circles, as on the collapsed cards in the reference. */
+.dmapt-panel::before {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -50px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .5);
+  opacity: .55;
+  transition: opacity .45s ease;
+  pointer-events: none;
+}
+.dmapt-panel { position: relative; }
+
+.dmapt-panel.is-open {
+  flex-grow: 1;
+  background: #fff;
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+.dmapt-panel.is-open::before { opacity: 0; }
+
+.dmapt-panel__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  height: 100%;
+  padding: 30px;
+}
+
+.dmapt-panel__main {
+  display: flex;
+  flex: 0 0 240px;
+  flex-direction: column;
+  width: 240px;
+}
+
+.dmapt-panel__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 16px;
+  border-radius: 13px;
+  background: rgba(212, 160, 23, .16);
+  color: var(--gold-dark);
+  transition: background .45s ease, color .45s ease;
+}
+.dmapt-panel.is-open .dmapt-panel__icon { background: var(--gold); color: #1a1400; }
+
+.dmapt-panel__title {
+  display: block;
+  margin-bottom: .5rem;
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+}
+
+/* Copy is present in both states so the column never resizes; it simply
+   fades in with the panel. */
+.dmapt-panel__text {
+  display: block;
+  color: var(--body);
+  font-size: .92rem;
+  line-height: 1.65;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .4s ease, transform .45s cubic-bezier(.22, .68, .28, 1);
+}
+.dmapt-panel.is-open .dmapt-panel__text {
+  opacity: 1;
+  transform: none;
+  transition-delay: .16s;
+}
+
+.dmapt-panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+.dmapt-panel__arrow {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(13, 17, 32, .18);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  transition: background .4s ease, color .4s ease, border-color .4s ease, transform .4s ease;
+}
+/* Collapsed panels point out (↗); the open one points forward. */
+.dmapt-panel__arrow svg { transform: rotate(-45deg); transition: transform .4s ease; }
+.dmapt-panel.is-open .dmapt-panel__arrow {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1400;
+}
+.dmapt-panel.is-open .dmapt-panel__arrow svg { transform: none; }
+
+.dmapt-panel__media {
+  flex: 1 1 200px;
+  min-width: 190px;
+  border-radius: 14px;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity .45s ease, transform .6s cubic-bezier(.22, .68, .28, 1);
+}
+.dmapt-panel.is-open .dmapt-panel__media {
+  opacity: 1;
+  transform: none;
+  transition-delay: .1s;
+}
+.dmapt-panel__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 1100px) {
+  .dmapt-panel { flex-basis: 250px; min-width: 250px; }
+  .dmapt-panel__main { flex-basis: 200px; width: 200px; }
+  .dmapt-panel__inner { padding: 24px; gap: 18px; }
+}
+
+/* Below the accordion's comfortable width the panels stack and all of them
+   read as open. */
+@media (max-width: 900px) {
+  .dmapt-acc { flex-direction: column; gap: 14px; }
+  .dmapt-panel,
+  .dmapt-panel.is-open {
+    flex: 0 0 auto;
+    min-width: 0;
+    height: auto;
+    background: #fff;
+    border-color: var(--line);
+    box-shadow: var(--shadow);
+  }
+  .dmapt-panel::before { display: none; }
+  .dmapt-panel__inner { flex-direction: row; padding: 22px; }
+  .dmapt-panel__main { flex: 1 1 auto; width: auto; }
+  .dmapt-panel__text,
+  .dmapt-panel__media { opacity: 1; transform: none; }
+  .dmapt-panel__media { flex: 0 0 150px; min-width: 0; height: 170px; }
+  .dmapt-panel__arrow { background: var(--gold); border-color: var(--gold); color: #1a1400; }
+  .dmapt-panel__arrow svg { transform: none; }
+  .dmapt-panel__icon { background: var(--gold); color: #1a1400; }
+}
+
+@media (max-width: 560px) {
+  .dmapt-panel__inner { flex-direction: column; }
+  .dmapt-panel__media { flex: 0 0 auto; width: 100%; height: 150px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dmapt-panel,
+  .dmapt-panel__text,
+  .dmapt-panel__media,
+  .dmapt-panel__icon,
+  .dmapt-panel__arrow,
+  .dmapt-panel__arrow svg { transition: none; }
+}
+
+/* ==========================================================================
+   Our Team — names that open to reveal the portrait
+   Each row rests as a first name, a gap, and a last name. Hovering widens the
+   gap into a portrait: only the photo's frame animates, the image inside keeps
+   its full width, so it wipes open from the centre instead of stretching.
+   ========================================================================== */
+.team-list {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.team-row {
+  border-bottom: 1px solid var(--line);
+}
+.team-row:first-child { border-top: 1px solid var(--line); }
+
+.team-row__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 264px;
+  cursor: default;
+}
+
+.team-row__name {
+  color: var(--ink);
+  font-size: clamp(1.9rem, 4.6vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1.1;
+  white-space: nowrap;
+  transition: color .45s ease;
+}
+.team-row:hover .team-row__name,
+.team-row:focus-within .team-row__name { color: var(--gold-dark); }
+
+/* The frame is what animates; --team-w is its open width. */
+.team-row__photo {
+  --team-w: 182px;
+  position: relative;
+  flex: 0 0 auto;
+  width: 0;
+  height: 232px;
+  margin: 0 13px;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: width .55s cubic-bezier(.22, .68, .28, 1), margin .55s cubic-bezier(.22, .68, .28, 1);
+}
+.team-row:hover .team-row__photo,
+.team-row:focus-within .team-row__photo {
+  width: var(--team-w);
+  margin: 0 22px;
+}
+.team-row__photo img {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--team-w);
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  transform: translateX(-50%);
+}
+
+.team-row__meta {
+  flex: 0 0 190px;
+  width: 190px;
+  padding-left: 26px;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity .45s ease, transform .5s cubic-bezier(.22, .68, .28, 1);
+}
+.team-row:hover .team-row__meta,
+.team-row:focus-within .team-row__meta {
+  opacity: 1;
+  transform: none;
+  transition-delay: .12s;
+}
+.team-row__role {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--gold-dark);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.team-row__bio {
+  display: block;
+  color: var(--body);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 1024px) {
+  .team-row__photo { --team-w: 150px; height: 196px; }
+  .team-row__meta { flex-basis: 160px; width: 160px; padding-left: 20px; }
+  .team-row__inner { min-height: 226px; }
+}
+
+/* Without hover the reveal can never happen, so the rows settle into a plain
+   portrait-beside-name layout with everything already visible. */
+@media (max-width: 860px), (hover: none) {
+  .team-row__inner {
+    justify-content: flex-start;
+    gap: 6px;
+    min-height: 0;
+    padding: 24px 0;
+    flex-wrap: wrap;
+  }
+  .team-row__photo,
+  .team-row:hover .team-row__photo {
+    order: -1;
+    width: 122px;
+    height: 152px;
+    margin: 0 18px 0 0;
+  }
+  .team-row__photo img { width: 122px; }
+  .team-row__name { font-size: clamp(1.5rem, 6vw, 2rem); }
+  .team-row__name + .team-row__photo + .team-row__name { margin-left: .35em; }
+  .team-row__meta,
+  .team-row:hover .team-row__meta {
+    flex: 1 1 100%;
+    width: auto;
+    margin-top: 10px;
+    padding-left: 140px;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .team-row__meta,
+  .team-row:hover .team-row__meta { padding-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team-row__photo,
+  .team-row__meta,
+  .team-row__name { transition: none; }
+}
+
+/* ==========================================================================
+   Scroll zoom-out
+   The GOAL-Based photo opens filling the viewport, then is pulled back into
+   the left column of the standard feature layout while the copy arrives on
+   the right. The stage is pinned for the length of the track and --p
+   (0 to 1, written by main.js) drives the whole move.
+
+   Every target measurement is expressed in CSS so the landing geometry stays
+   correct on resize without the script measuring anything: the container is
+   1200px wide with 20px gutters, and the feature grid is two equal columns
+   with a 60px gap.
+   ========================================================================== */
+.section--zoom { padding-top: 0; }
+
+.gz {
+  --p: 0;
+  position: relative;
+  /* 100vh of pin for the zoom, then room to hold the finished layout. */
+  height: 210vh;
+}
+.container + .gz { margin-top: 90px; }
+
+.gz__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.gz__inner {
+  --gz-inner: min(1160px, 100vw - 40px);
+  --gz-col: calc((var(--gz-inner) - 60px) / 2);
+  --gz-left: calc((100vw - var(--gz-inner)) / 2);
+  --gz-h: 62vh;
+  --gz-top: calc((100vh - var(--gz-h)) / 2);
+  position: relative;
+  height: 100%;
+}
+
+/* Interpolates from the whole viewport to the grid's left column. */
+.gz__frame {
+  position: absolute;
+  left: calc(var(--gz-left) * var(--p));
+  top: calc(var(--gz-top) * var(--p));
+  width: calc(100vw - (100vw - var(--gz-col)) * var(--p));
+  height: calc(100vh - (100vh - var(--gz-h)) * var(--p));
+  border-radius: calc(var(--radius) * var(--p));
+  overflow: hidden;
+  box-shadow: 0 40px 90px rgba(13, 17, 32, calc(.2 * var(--p)));
+}
+.gz__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Eases out of a slight over-scale so the pull-back reads as a lens move. */
+  transform: scale(calc(1.14 - .14 * var(--p)));
+}
+
+/* Sits in the opposite column and arrives once the photo has cleared it. */
+.gz__body {
+  position: absolute;
+  right: var(--gz-left);
+  top: 50%;
+  width: var(--gz-col);
+  transform: translateY(-50%);
+  opacity: clamp(0, (var(--p) - .62) * 3.2, 1);
+}
+.gz__body h2 { margin-bottom: .5em; }
+.gz__body p { margin-bottom: 0; }
+
+/* Mirrored: the photo lands in the right column, the copy on the left, so
+   consecutive blocks keep alternating the way the old feature rows did. */
+.gz--flip .gz__frame {
+  left: calc((100vw - var(--gz-left) - var(--gz-col)) * var(--p));
+}
+.gz--flip .gz__body {
+  right: auto;
+  left: var(--gz-left);
+}
+
+/* Below the two-column width there is nothing to zoom into, so the block is
+   served as an ordinary stacked feature. */
+@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+  .gz { height: auto; padding: 0 20px; }
+  .container + .gz { margin-top: 60px; }
+  .gz__stage { position: static; height: auto; overflow: visible; }
+  .gz__inner {
+    height: auto;
+    max-width: 1160px;
+    margin: 0 auto;
+    display: grid;
+    gap: 28px;
+  }
+  .gz__frame {
+    position: static;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .gz__frame img { transform: none; }
+  .gz__body {
+    position: static;
+    width: auto;
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Horizontal hand-off
+   Pinned between GOAL-Based and Students, and it runs both moves in one go:
+   the points panel travels out to the left while the Students photo arrives
+   full-bleed from the right, and the same pin then zooms that photo back into
+   its column. --h (sideways) and --p (zoom) are written by main.js.
+   ========================================================================== */
+.hs {
+  --h: 0;
+  --p: 0;
+  position: relative;
+  /* Pin, sideways move, zoom, then a hold on the finished layout. */
+  height: 330vh;
+}
+
+.hs__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hs__track {
+  display: flex;
+  width: 200vw;
+  height: 100%;
+  transform: translate3d(calc(var(--h) * -100vw), 0, 0);
+}
+
+/* Travels the other way: the incoming panel is first in the DOM, so the track
+   starts a screen over and slides back to zero, bringing it in from the left. */
+.hs--left .hs__track {
+  transform: translate3d(calc((var(--h) - 1) * 100vw), 0, 0);
+}
+
+.hs__panel {
+  display: grid;
+  align-content: center;
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100%;
+}
+.hs__panel .pts { margin-top: 0; }
+
+/* The zoom panel must be a plain full-height box, not a centred grid: the
+   frame is positioned against it, so a content-sized, vertically centred row
+   would start the full-bleed photo halfway down the screen instead of
+   filling it. */
+.hs__panel--zoom { display: block; }
+.hs__panel--zoom > .gz__inner { height: 100%; }
+
+/* Carries the tone of the section the panel hands over to. */
+.hs__panel--soft { background: var(--bg-soft); }
+
+/* No sideways travel on narrow screens — the points and the next section
+   simply follow one another, and the photo is served at its resting size. */
+@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+  .hs { height: auto; padding-bottom: 0; }
+  .hs__stage { position: static; height: auto; overflow: visible; }
+  .hs__track { display: block; width: auto; transform: none; }
+  .hs__panel { display: block; width: auto; height: auto; }
+  /* This variant puts the incoming panel first in the DOM for the leftward
+     travel, so stacked it has to be ordered back after the points. */
+  .hs--left .hs__track { display: flex; flex-direction: column; transform: none; }
+  .hs--left .hs__panel--zoom { order: 1; }
+  .hs__panel--zoom > .gz__inner { height: auto; padding: 60px 20px 0; }
+}
+
+/* ==========================================================================
+   Feature points
+   Each feature block's points sit below it as their own animated set. All
+   three work the same way — a collapsed card opens to give up its text — but
+   each section opens along a different axis so no two read alike.
+   ========================================================================== */
+.pts { margin-top: 46px; }
+.pts + .feature { margin-top: 100px; }
+.pts__lead {
+  margin: 0 0 20px;
+  font-size: 1.15rem;
+}
+
+/* --- Model A: blades (GOAL-Based) -----------------------------------------
+   Panels stand as narrow blades with the title running up the edge; opening
+   one lays the title flat and lets the copy in beside it. */
+.pts--blade .pts__row {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  height: 268px;
+}
+
+.blade {
+  position: relative;
+  flex: 0 1 92px;
+  min-width: 92px;
+  flex-grow: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(13, 17, 32, .1);
+  border-radius: 18px;
+  background: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    flex-grow .6s cubic-bezier(.22, .68, .28, 1),
+    background .5s ease,
+    box-shadow .5s ease;
+}
+.blade:focus-visible { outline: 3px solid var(--gold-dark); outline-offset: 3px; }
+.blade.is-active {
+  flex-grow: 1;
+  background: linear-gradient(135deg, #b8860b 0%, #d4a017 55%, #f5c542 100%);
+  box-shadow: 0 20px 46px rgba(212, 160, 23, .32);
+}
+
+/* Collapsed: title reading bottom-to-top up the blade. Rotating a nowrap line
+   rather than using writing-mode keeps the glyphs upright and the baseline
+   predictable across browsers. */
+.blade__edge {
+  position: absolute;
+  left: 30px;
+  bottom: 28px;
+  transform-origin: 0 0;
+  transform: rotate(-90deg);
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  opacity: .82;
+  transition: opacity .3s ease;
+}
+.blade.is-active .blade__edge { opacity: 0; }
+
+/* Open: the same title laid flat, with the copy under it. */
+.blade__open {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  padding: 30px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .4s ease, transform .5s cubic-bezier(.22, .68, .28, 1);
+}
+.blade.is-active .blade__open {
+  opacity: 1;
+  transform: none;
+  transition-delay: .18s;
+}
+.blade__title {
+  display: block;
+  margin-bottom: 10px;
+  color: #1a1400;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.blade__text {
+  display: block;
+  max-width: 52ch;
+  color: rgba(26, 20, 0, .82);
+  font-size: .93rem;
+  line-height: 1.65;
+}
+
+/* --- Model B: turn cards (Students) ---------------------------------------
+   Four faces in a row that rotate on their vertical axis to show the detail
+   printed on the back. */
+.pts--turn {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.turn {
+  min-height: 188px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  /* Depth for the rotation; without it the flip reads as a flat squash. */
+  perspective: 1100px;
+}
+.turn:focus-visible { outline: 3px solid var(--gold-dark); outline-offset: 4px; border-radius: 20px; }
+
+.turn__inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  transform-style: preserve-3d;
+  transition: transform .72s cubic-bezier(.36, .66, .3, 1);
+}
+.turn:hover .turn__inner,
+.turn.is-turned .turn__inner { transform: rotateY(180deg); }
+
+.turn__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  padding: 24px;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  text-align: left;
+}
+
+.turn__front {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(212, 160, 23, .3);
+  background: linear-gradient(150deg, #fff 0%, rgba(212, 160, 23, .16) 100%);
+}
+.turn__title {
+  color: var(--ink);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+}
+
+/* Arrow badge hinting the card turns. */
+.turn__mark {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(13, 17, 32, .2);
+  border-radius: 50%;
+}
+.turn__mark::before,
+.turn__mark::after {
+  content: "";
+  position: absolute;
+  background: var(--gold-dark);
+}
+.turn__mark::before {
+  left: 10px;
+  top: 50%;
+  width: 13px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+.turn__mark::after {
+  right: 10px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--gold-dark);
+  border-right: 2px solid var(--gold-dark);
+  background: none;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.turn__back {
+  align-items: flex-end;
+  border: 1px solid var(--ink);
+  background: linear-gradient(150deg, #0d1120 0%, #23305a 100%);
+  transform: rotateY(180deg);
+}
+.turn__text {
+  color: rgba(255, 255, 255, .8);
+  font-size: .92rem;
+  line-height: 1.65;
+}
+
+/* --- Model C: wipe cards (Business Owners) --------------------------------
+   A gold dot parked in the corner scales up until it floods the card, taking
+   the detail text with it. */
+.pts--wipe {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.wipe {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-height: 208px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+  cursor: default;
+  transition: border-color .5s ease, box-shadow .5s ease;
+}
+.wipe:hover,
+.wipe:focus-visible {
+  border-color: rgba(212, 160, 23, .55);
+  box-shadow: 0 18px 40px rgba(212, 160, 23, .24);
+  outline: none;
+}
+
+/* At rest a marker dot; on hover the card's whole background. Scaling a small
+   circle keeps the flood cheap — no width or colour is animated. */
+.wipe__blob {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4a017 0%, #f5c542 100%);
+  transform: scale(1);
+  transition: transform .72s cubic-bezier(.5, .1, .2, 1);
+}
+.wipe:hover .wipe__blob,
+.wipe:focus-visible .wipe__blob { transform: scale(18); }
+
+.wipe__body {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.wipe__title {
+  display: block;
+  color: var(--ink);
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+}
+
+.wipe__text {
+  display: block;
+  margin-top: 10px;
+  color: rgba(26, 20, 0, .82);
+  font-size: .9rem;
+  line-height: 1.65;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .4s ease, transform .5s cubic-bezier(.22, .68, .28, 1);
+}
+.wipe:hover .wipe__text,
+.wipe:focus-visible .wipe__text {
+  opacity: 1;
+  transform: none;
+  transition-delay: .22s;
+}
+
+@media (max-width: 1024px) {
+  .pts--wipe,
+  .pts--turn { grid-template-columns: repeat(2, 1fr); }
+  .blade { flex-basis: 76px; min-width: 76px; }
+}
+
+/* Blades need width to open into; below that they stack as plain cards with
+   everything already showing. Lift cards do the same where there is no hover. */
+@media (max-width: 760px) {
+  .pts--blade .pts__row { flex-direction: column; height: auto; gap: 12px; }
+  .blade,
+  .blade.is-active {
+    flex: 0 0 auto;
+    min-width: 0;
+    background: linear-gradient(135deg, #b8860b 0%, #d4a017 55%, #f5c542 100%);
+    box-shadow: none;
+  }
+  .blade__edge { display: none; }
+  .blade__open { opacity: 1; transform: none; padding: 22px; }
+}
+
+/* Without hover the flood can never happen, so the cards are simply served
+   already flooded. */
+@media (max-width: 640px), (hover: none) {
+  .pts--wipe { grid-template-columns: 1fr; }
+  .wipe {
+    min-height: 0;
+    padding: 22px;
+    border-color: rgba(212, 160, 23, .55);
+    background: linear-gradient(135deg, #d4a017 0%, #f5c542 100%);
+  }
+  .wipe__blob { display: none; }
+  .wipe__text { opacity: 1; transform: none; }
+}
+
+@media (max-width: 560px) {
+  .pts--turn { grid-template-columns: 1fr; }
+  .turn { min-height: 158px; }
+}
+
+/* A card that has to be turned over is a poor deal when the motion is off, so
+   both faces are laid out flat instead. */
+@media (prefers-reduced-motion: reduce) {
+  .blade, .blade__edge, .blade__open,
+  .wipe, .wipe__blob, .wipe__text { transition: none; }
+
+  /* The flood cannot play, so hand the cards over already open. */
+  .wipe { background: linear-gradient(135deg, #d4a017 0%, #f5c542 100%); }
+  .wipe__blob { display: none; }
+  .wipe__text { opacity: 1; transform: none; }
+
+  .turn { min-height: 0; perspective: none; }
+  .turn__inner { transform: none !important; transform-style: flat; transition: none; }
+  .turn__face {
+    position: static;
+    display: block;
+    backface-visibility: visible;
+  }
+  .turn__front { border-radius: 20px 20px 0 0; }
+  .turn__back { border-radius: 0 0 20px 20px; border-top: 0; transform: none; }
+}
+
 }

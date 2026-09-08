@@ -79,7 +79,269 @@
     initChatbot();
     initBlogFeed();
     initAnimations();
+    initServiceStack();
+    initDmaptAccordion();
+    initPointGroups();
+    initCtaPair();
+    initZoomOut();
+    initHorizontalSlide();
   });
+
+  /* ---------------------------------------------------------- CTA card pair */
+  /* One class on the pair releases both cards; the stylesheet gives each its
+     own move and its own delay, so they arrive one after the other. */
+  function initCtaPair() {
+    var pairs = document.querySelectorAll('[data-cta]');
+    if (!pairs.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      for (var i = 0; i < pairs.length; i++) pairs[i].classList.add('is-in');
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-in');
+        io.unobserve(entry.target);
+      });
+    }, { threshold: .25 });
+
+    for (var j = 0; j < pairs.length; j++) io.observe(pairs[j]);
+  }
+
+  /* --------------------------------------------------- horizontal hand-off */
+  /* One pin, two moves. The track's scroll runs the sideways travel first
+     (--h), then zooms the photo that arrived into its column (--p), with a
+     short hold at each end so neither move feels clipped. */
+  function initHorizontalSlide() {
+    var tracks = document.querySelectorAll('[data-hslide]');
+    if (!tracks.length) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var ticking = false;
+
+    function stage(raw, from, to) {
+      var v = (raw - from) / (to - from);
+      if (v < 0) v = 0;
+      if (v > 1) v = 1;
+      return v;
+    }
+
+    function update() {
+      ticking = false;
+      for (var i = 0; i < tracks.length; i++) {
+        var rect = tracks[i].getBoundingClientRect();
+        var travel = rect.height - window.innerHeight;
+        var raw = travel > 0 ? -rect.top / travel : 0;
+
+        var h = stage(raw, SLIDE_FROM, SLIDE_TO);
+        var p = stage(raw, ZOOM_FROM, ZOOM_TO);
+        // Ease out, so the frame lets go quickly and settles gently.
+        p = 1 - Math.pow(1 - p, 2.2);
+
+        tracks[i].style.setProperty('--h', h.toFixed(4));
+        tracks[i].style.setProperty('--p', p.toFixed(4));
+      }
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+
+  /* Where each move sits along the track's travel. The sideways slide runs
+     first, the zoom picks up straight after it, and the rest holds the
+     finished layout before the pin lets go. */
+  var SLIDE_FROM = .08;
+  var SLIDE_TO = .40;
+  var ZOOM_FROM = .42;
+  var ZOOM_TO = .78;
+
+  /* -------------------------------------------------------- scroll zoom-out */
+  /* Writes how far the pinned frame has been pulled back (0 = filling the
+     viewport, 1 = resting card) for the CSS to size against. */
+  /* Share of the track's travel spent zooming; the rest holds the finished
+     layout. Matches the 210vh track and 100vh stage set in the stylesheet,
+     which leaves 110vh of travel, 70vh of it for the zoom. */
+  var ZOOM_SPAN = 70 / 110;
+
+  function initZoomOut() {
+    var tracks = document.querySelectorAll('[data-zoom]');
+    if (!tracks.length) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      for (var i = 0; i < tracks.length; i++) {
+        var rect = tracks[i].getBoundingClientRect();
+        var travel = rect.height - window.innerHeight;
+        var p = travel > 0 ? -rect.top / travel : 0;
+        // The zoom finishes inside the first two thirds of the track; the rest
+        // holds the finished layout on screen before the pin lets go.
+        p = p / ZOOM_SPAN;
+        if (p < 0) p = 0;
+        if (p > 1) p = 1;
+        // Ease out, so the frame lets go quickly and settles gently.
+        var eased = 1 - Math.pow(1 - p, 2.2);
+        tracks[i].style.setProperty('--p', eased.toFixed(4));
+      }
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+
+  /* --------------------------------------------------------- feature points */
+  /* Blades keep exactly one card open: hover opens it on a pointer device,
+     click and keyboard focus work everywhere. Turn cards flip on hover in CSS
+     and need a tap or keypress everywhere else. Lift cards are pure CSS. */
+  function initPointGroups() {
+    initBlades();
+    initTurnCards();
+  }
+
+  function initBlades() {
+    var groups = document.querySelectorAll('[data-points]');
+
+    for (var g = 0; g < groups.length; g++) {
+      (function (group) {
+        var cards = group.querySelectorAll('.blade');
+        if (cards.length < 2) return;
+
+        var flat = window.matchMedia('(max-width: 760px)');
+        var hoverable = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+        function open(card) {
+          // Blades collapse into plain cards on narrow screens.
+          if (flat.matches) return;
+          if (card.classList.contains('is-active')) return;
+          for (var i = 0; i < cards.length; i++) {
+            var on = cards[i] === card;
+            cards[i].classList.toggle('is-active', on);
+            cards[i].setAttribute('aria-expanded', on ? 'true' : 'false');
+          }
+        }
+
+        for (var i = 0; i < cards.length; i++) {
+          (function (card) {
+            card.addEventListener('click', function () { open(card); });
+            card.addEventListener('focus', function () { open(card); });
+            card.addEventListener('mouseenter', function () {
+              if (hoverable.matches) open(card);
+            });
+          })(cards[i]);
+        }
+      })(groups[g]);
+    }
+  }
+
+  function initTurnCards() {
+    var cards = document.querySelectorAll('.turn');
+
+    for (var i = 0; i < cards.length; i++) {
+      (function (card) {
+        card.addEventListener('click', function () {
+          var turned = card.classList.toggle('is-turned');
+          card.setAttribute('aria-pressed', turned ? 'true' : 'false');
+        });
+        // Leaving the card puts it back face-up, so hover and tap agree.
+        card.addEventListener('mouseleave', function () {
+          card.classList.remove('is-turned');
+          card.setAttribute('aria-pressed', 'false');
+        });
+      })(cards[i]);
+    }
+  }
+
+
+  /* ------------------------------------------------------ DMAPT accordion */
+  /* Exactly one panel is open at a time. Hover opens it on a pointer device,
+     click and keyboard focus work everywhere. Below 900px the CSS shows every
+     panel expanded, so the script stands down. */
+  function initDmaptAccordion() {
+    var acc = document.querySelector('.dmapt-acc');
+    if (!acc) return;
+    var panels = acc.querySelectorAll('.dmapt-panel');
+    if (!panels.length) return;
+
+    var stacked = window.matchMedia('(max-width: 900px)');
+    var hoverable = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+    function open(panel) {
+      if (stacked.matches || panel.classList.contains('is-open')) return;
+      for (var i = 0; i < panels.length; i++) {
+        var on = panels[i] === panel;
+        panels[i].classList.toggle('is-open', on);
+        panels[i].setAttribute('aria-expanded', on ? 'true' : 'false');
+      }
+    }
+
+    for (var i = 0; i < panels.length; i++) {
+      (function (panel) {
+        panel.addEventListener('click', function () { open(panel); });
+        panel.addEventListener('focus', function () { open(panel); });
+        panel.addEventListener('mouseenter', function () {
+          if (hoverable.matches) open(panel);
+        });
+      })(panels[i]);
+    }
+  }
+
+  /* --------------------------------------------------- services card stack */
+  /* The service cards are sticky, so each one is covered by the next as you
+     scroll. Writing --svc-p (0 → 1, how far the next card has covered this
+     one) lets the CSS scale and dim the card underneath, which turns the
+     overlap into a sense of depth. */
+  function initServiceStack() {
+    var cards = document.querySelectorAll('.svc-card');
+    if (cards.length < 2) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      // Sticky is switched off on narrow/short viewports; keep the cards flat.
+      if (window.innerWidth <= 760 || window.innerHeight <= 620) {
+        for (var j = 0; j < cards.length; j++) cards[j].style.setProperty('--svc-p', '0');
+        return;
+      }
+      for (var i = 0; i < cards.length - 1; i++) {
+        var rect = cards[i].getBoundingClientRect();
+        var next = cards[i + 1].getBoundingClientRect();
+        var p = rect.height ? (rect.bottom - next.top) / rect.height : 0;
+        if (p < 0) p = 0;
+        if (p > 1) p = 1;
+        cards[i].style.setProperty('--svc-p', p.toFixed(3));
+      }
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
 
   /* ------------------------------------------------------------- blog feed */
   /* Posts published through /admin. If the API is unreachable — for example
@@ -423,7 +685,9 @@
       '.feature__media img', '.post img', '.role__media img', '.founder img',
       '.card__photo', '.month', '.card', '.role', '.career', '.price', '.tool',
       '.contact-tile', '.faq__item', '.blog-empty__icon', '.map',
-      '.cta-box', '.stat', '.rcard'
+      /* .stat and .cta-box are left out: they run their own arrival moves,
+         and the media transform would override them. */
+      '.rcard'
     ].join(',')).forEach(function (el) {
       el.classList.add('anim-media');
     });
@@ -476,6 +740,11 @@
   /* --------------------------------------------------------------- chatbot */
   /* A rule-based assistant: it matches keywords against the site's own
      content, so it answers offline with no API and never invents facts. */
+
+  /* wa.me wants the number with no plus or spaces. Same line as everywhere
+     else on the site. */
+  var WHATSAPP_URL = 'https://wa.me/916235502722?text=' +
+    encodeURIComponent('Hi Golden Qube, I would like to know more about your digital marketing services.');
 
   var KB = [
     {
@@ -573,12 +842,12 @@
     el.className = 'chatbot';
     el.innerHTML =
       '<button class="chatbot__launch" type="button" aria-label="Chat with us" aria-expanded="false">' +
-        '<svg class="chatbot__icon-open" width="26" height="26"><use href="#i-chat"></use></svg>' +
+        '<img class="chatbot__icon-open" src="assets/img/favicon.png" alt="">' +
         '<svg class="chatbot__icon-close" width="22" height="22"><use href="#i-close"></use></svg>' +
       '</button>' +
       '<div class="chatbot__panel" role="dialog" aria-label="Golden Qube assistant" hidden>' +
         '<div class="chatbot__head">' +
-          '<div class="chatbot__avatar"><svg width="18" height="18"><use href="#i-chat"></use></svg></div>' +
+          '<div class="chatbot__avatar"><img src="assets/img/favicon.png" alt=""></div>' +
           '<div>' +
             '<strong>Golden Qube Assistant</strong>' +
             '<span>Typically replies instantly</span>' +
@@ -595,6 +864,12 @@
             '<svg width="17" height="17"><use href="#i-send"></use></svg>' +
           '</button>' +
         '</form>' +
+        '<a class="chatbot__wa" href="' + WHATSAPP_URL + '" target="_blank" rel="noopener">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+            '<path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.4-.7-1.7-.8s-.4-.1-.5.1-.6.8-.7 1-.3.2-.5.1a6.7 6.7 0 0 1-2-1.2 7.4 7.4 0 0 1-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4c0-.1-.5-1.3-.7-1.8s-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.1 11.1 0 0 0 4.3 3.8c.6.3 1.1.4 1.4.5a3.4 3.4 0 0 0 1.6.1 2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2z"/>' +
+          '</svg>' +
+          'Chat on WhatsApp' +
+        '</a>' +
       '</div>';
     document.body.appendChild(el);
 
