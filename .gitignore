@@ -9,3 +9,6 @@ Thumbs.db
 # No dependencies are used, but just in case.
 node_modules/
 .vercel
+
+# Local mobile-preview harness, not part of the site.
+_probe.html
