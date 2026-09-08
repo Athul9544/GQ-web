@@ -8,4 +8,4 @@ module.exports = withConfig(async (req, res) => {
     return send(res, 401, { error: 'Incorrect password' });
   }
   send(res, 200, { token: issueToken() });
-});
+}, ['ADMIN_PASSWORD']);

@@ -45,12 +45,17 @@ const IMAGE_TYPES = {
 
 /* ------------------------------------------------------------------ config */
 
-/** Names of the environment variables that have not been set in Vercel. */
-function missingConfig() {
-  const missing = [];
-  if (!ADMIN_PASSWORD) missing.push('ADMIN_PASSWORD');
-  if (!GITHUB_TOKEN) missing.push('GITHUB_TOKEN');
-  return missing;
+const CONFIG_VALUES = {
+  ADMIN_PASSWORD: () => ADMIN_PASSWORD,
+  GITHUB_TOKEN: () => GITHUB_TOKEN
+};
+
+/* Names of the environment variables that have not been set in Vercel. Callers
+   pass the ones they actually need: signing in only needs the password, so a
+   missing GITHUB_TOKEN must not lock the operator out of the portal — it is
+   only publishing, which commits to the repo, that cannot work without it. */
+function missingConfig(needs = ['ADMIN_PASSWORD', 'GITHUB_TOKEN']) {
+  return needs.filter(name => !CONFIG_VALUES[name]());
 }
 
 /* Which deployment is answering. Vercel injects these, so they need no setup —
@@ -66,9 +71,9 @@ function deploymentInfo() {
 }
 
 /** Wrap a handler so a misconfigured deploy explains itself instead of 500ing. */
-function withConfig(handler) {
+function withConfig(handler, needs) {
   return async (req, res) => {
-    const missing = missingConfig();
+    const missing = missingConfig(needs);
     if (missing.length) {
       const at = deploymentInfo();
       return send(res, 503, {
