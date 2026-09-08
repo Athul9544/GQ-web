@@ -172,32 +172,27 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .header__cta { display: flex; align-items: center; gap: 14px; }
 
+/* A labelled button rather than three lines — it says what it does. */
 .nav-toggle {
   display: none;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
-  padding: 0;
-}
-.nav-toggle span,
-.nav-toggle span::before,
-.nav-toggle span::after {
-  display: block;
-  width: 20px;
-  height: 2px;
-  margin: 0 auto;
+  padding: 11px 20px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
   background: var(--ink);
-  transition: transform .25s, opacity .25s;
+  color: #fff;
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .25s, color .25s;
 }
-.nav-toggle span { position: relative; }
-.nav-toggle span::before { content: ""; position: absolute; top: -6px; }
-.nav-toggle span::after { content: ""; position: absolute; top: 6px; }
-.nav-toggle.is-open span { background: transparent; }
-.nav-toggle.is-open span::before { transform: translateY(6px) rotate(45deg); }
-.nav-toggle.is-open span::after { transform: translateY(-6px) rotate(-45deg); }
+.nav-toggle:hover { background: var(--gold); border-color: var(--gold); color: #1a1400; }
+.nav-toggle__close { display: none; }
+.nav-toggle.is-open { background: var(--gold); border-color: var(--gold); color: #1a1400; }
+.nav-toggle.is-open .nav-toggle__open { display: none; }
+.nav-toggle.is-open .nav-toggle__close { display: inline; }
 
 /* Hero --------------------------------------------------------------------- */
 .hero { position: relative; overflow: hidden; }
@@ -1667,29 +1662,6 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 }
 .svc-card:last-child .svc-card__tags li:hover { color: #f5c542; }
 
-.svc-card__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 26px;
-  border: 1px solid var(--svc-hair);
-  border-radius: 999px;
-  background: var(--svc-chip);
-  color: var(--svc-fg);
-  font-size: .85rem;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  transition: gap .25s, background .25s, color .25s, border-color .25s;
-}
-.svc-card__cta:hover {
-  gap: 16px;
-  background: var(--svc-fg);
-  border-color: var(--svc-fg);
-  color: var(--svc-bg-contrast, #0d1120);
-}
-.svc-card:last-child .svc-card__cta:hover { color: #f5c542; }
-
 .svc-card__media {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2059,42 +2031,35 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   transition-delay: .12s;
 }
 
-/* Narrower than the reveal needs: the row stacks and shows everything. */
+/* Phones run the same reveal — the portrait still opens out from between the
+   two halves of the name. Only the sizes change, and the role and bio drop
+   below the name instead of sitting beside it, where there is no room. */
 @media (max-width: 700px) {
-  .team-row__inner {
-    justify-content: flex-start;
-    gap: 6px;
-    min-height: 0;
-    padding: 24px 0;
-    flex-wrap: wrap;
-  }
-  .team-row__photo,
+  /* The name and portrait still centre, but within the upper part of the row —
+     the padding reserves the band the role and bio drop into. */
+  .team-row__inner { min-height: 256px; padding-bottom: 96px; }
+  .team-row__photo { --team-w: 96px; height: 122px; margin: 0 7px; }
   .team-row:hover .team-row__photo,
-  .team-row.is-lit .team-row__photo {
-    order: -1;
-    width: 122px;
-    height: 152px;
-    margin: 0 18px 0 0;
-  }
-  .team-row__photo img { width: 122px; }
-  .team-row__name { font-size: clamp(1.5rem, 6vw, 2rem); }
-  .team-row__name + .team-row__photo + .team-row__name { margin-left: .35em; }
-  .team-row__meta,
-  .team-row:hover .team-row__meta,
-  .team-row.is-lit .team-row__meta {
-    position: static;
-    flex: 1 1 100%;
-    width: auto;
-    margin-top: 10px;
-    padding-left: 140px;
-    opacity: 1;
-    transform: none;
-  }
-}
+  .team-row:focus-within .team-row__photo,
+  .team-row.is-lit .team-row__photo { margin: 0 13px; }
+  .team-row__name { font-size: clamp(1.2rem, 6.4vw, 1.75rem); }
 
-@media (max-width: 560px) {
   .team-row__meta,
-  .team-row:hover .team-row__meta { padding-left: 0; }
+  .team-row.is-lit .team-row__meta {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 20px;
+    width: auto;
+    padding: 0 6px;
+    text-align: center;
+    transform: translateY(10px);
+  }
+  .team-row:hover .team-row__meta,
+  .team-row:focus-within .team-row__meta,
+  .team-row.is-lit .team-row__meta { transform: none; }
+  .team-row__role { margin-bottom: 5px; font-size: .7rem; }
+  .team-row__bio { font-size: .74rem; line-height: 1.5; }
 }
 
 @media (prefers-reduced-motion: reduce) {

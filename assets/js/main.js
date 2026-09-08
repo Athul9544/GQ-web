@@ -442,13 +442,15 @@
 
     if (toggle && nav) {
       toggle.addEventListener('click', function () {
-        nav.classList.toggle('is-open');
-        toggle.classList.toggle('is-open');
+        var open = nav.classList.toggle('is-open');
+        toggle.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       });
       nav.addEventListener('click', function (e) {
         if (e.target.tagName === 'A') {
           nav.classList.remove('is-open');
           toggle.classList.remove('is-open');
+          toggle.setAttribute('aria-expanded', 'false');
         }
       });
     }
