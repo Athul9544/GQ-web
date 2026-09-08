@@ -82,32 +82,46 @@
     initServiceStack();
     initDmaptAccordion();
     initPointGroups();
-    initCtaPair();
+    initFooterMark();
     initZoomOut();
     initHorizontalSlide();
   });
 
-  /* ---------------------------------------------------------- CTA card pair */
-  /* One class on the pair releases both cards; the stylesheet gives each its
-     own move and its own delay, so they arrive one after the other. */
-  function initCtaPair() {
-    var pairs = document.querySelectorAll('[data-cta]');
-    if (!pairs.length) return;
+  /* ------------------------------------------------------------ footer mark */
+  /* Aims the wordmark's spotlight at the cursor. The light itself is a radial
+     gradient clipped to the letters in CSS; this only reports where it is. */
+  function initFooterMark() {
+    var marks = document.querySelectorAll('.footer__mark');
+    if (!marks.length) return;
 
-    if (!('IntersectionObserver' in window)) {
-      for (var i = 0; i < pairs.length; i++) pairs[i].classList.add('is-in');
-      return;
+    for (var i = 0; i < marks.length; i++) {
+      (function (el) {
+        var pending = false;
+        var x = 0;
+        var y = 0;
+
+        function paint() {
+          pending = false;
+          el.style.setProperty('--mx', x + 'px');
+          el.style.setProperty('--my', y + 'px');
+        }
+
+        el.addEventListener('mousemove', function (e) {
+          var r = el.getBoundingClientRect();
+          x = e.clientX - r.left;
+          y = e.clientY - r.top;
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(paint);
+        });
+
+        // Park it off-canvas so the light goes out when the cursor leaves.
+        el.addEventListener('mouseleave', function () {
+          el.style.removeProperty('--mx');
+          el.style.removeProperty('--my');
+        });
+      })(marks[i]);
     }
-
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-in');
-        io.unobserve(entry.target);
-      });
-    }, { threshold: .25 });
-
-    for (var j = 0; j < pairs.length; j++) io.observe(pairs[j]);
   }
 
   /* --------------------------------------------------- horizontal hand-off */
@@ -131,17 +145,17 @@
     function update() {
       ticking = false;
       for (var i = 0; i < tracks.length; i++) {
-        var rect = tracks[i].getBoundingClientRect();
+        var el = tracks[i];
+        var rect = el.getBoundingClientRect();
         var travel = rect.height - window.innerHeight;
         var raw = travel > 0 ? -rect.top / travel : 0;
+        var s = STAGES[el.getAttribute('data-hslide')] || STAGES[''];
 
-        var h = stage(raw, SLIDE_FROM, SLIDE_TO);
-        var p = stage(raw, ZOOM_FROM, ZOOM_TO);
-        // Ease out, so the frame lets go quickly and settles gently.
-        p = 1 - Math.pow(1 - p, 2.2);
-
-        tracks[i].style.setProperty('--h', h.toFixed(4));
-        tracks[i].style.setProperty('--p', p.toFixed(4));
+        el.style.setProperty('--h', stage(raw, s.h[0], s.h[1]).toFixed(4));
+        el.style.setProperty('--p', ease(stage(raw, s.p[0], s.p[1])).toFixed(4));
+        if (s.p2) {
+          el.style.setProperty('--p2', ease(stage(raw, s.p2[0], s.p2[1])).toFixed(4));
+        }
       }
     }
 
@@ -156,13 +170,18 @@
     update();
   }
 
-  /* Where each move sits along the track's travel. The sideways slide runs
-     first, the zoom picks up straight after it, and the rest holds the
-     finished layout before the pin lets go. */
-  var SLIDE_FROM = .08;
-  var SLIDE_TO = .40;
-  var ZOOM_FROM = .42;
-  var ZOOM_TO = .78;
+  /* Where each move sits along a track's travel, keyed by its data-hslide
+     value. The default runs the sideways slide first and picks the zoom up
+     straight after it. "zoom-first" carries a zoom on each side of the slide,
+     so the incoming panel gets its own progress value (--p2) rather than
+     sharing one with the panel leaving. */
+  var STAGES = {
+    '': { h: [.08, .40], p: [.42, .78] },
+    'zoom-first': { p: [.04, .26], h: [.34, .55], p2: [.60, .84] }
+  };
+
+  /* Ease out, so a frame lets go quickly and settles gently. */
+  function ease(v) { return 1 - Math.pow(1 - v, 2.2); }
 
   /* -------------------------------------------------------- scroll zoom-out */
   /* Writes how far the pinned frame has been pulled back (0 = filling the
