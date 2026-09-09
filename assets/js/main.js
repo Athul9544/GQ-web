@@ -1151,7 +1151,7 @@
     {
       id: 'hours',
       keys: ['time', 'timing', 'hours', 'open', 'when', 'schedule', 'weekend', 'flexible'],
-      answer: 'We are open <strong>Monday to Friday, 10.00 AM - 6.30 PM</strong>. Training timings are flexible — we schedule around what suits you.',
+      answer: 'We are open <strong>Monday to Saturday, 10.00 AM - 6.30 PM</strong>. Training timings are flexible — we schedule around what suits you.',
       chips: ['How do I enroll?', 'What does it cost?']
     },
     {
