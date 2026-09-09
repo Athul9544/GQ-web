@@ -860,12 +860,114 @@ ul { margin: 0; padding: 0; list-style: none; }
 .contact-layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 30px; align-items: start; }
 
 .contact-form-card {
-  padding: 40px;
+  position: relative;
+  padding: 44px 40px 40px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
+/* A band of gold across the top, so the card announces itself as the thing to
+   fill in rather than sitting as one more white box. */
+.contact-form-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold));
+}
+
+/* What the enquiry is about. Radios styled as chips: one tap rather than a
+   dropdown, and the options tell the reader what this team actually does. */
+.form__pick { border: 0; padding: 0; margin: 0; }
+.form__pick legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.form__chips { display: flex; flex-wrap: wrap; gap: 9px; }
+.chip { position: relative; display: inline-flex; }
+/* The radio stays focusable but invisible; the span is the visible control. */
+.chip input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.chip span {
+  display: block;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-soft);
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--body);
+  transition: border-color .2s, background .2s, color .2s;
+}
+.chip:hover span { border-color: rgba(212, 160, 23, .5); }
+.chip input:checked + span {
+  border-color: var(--gold);
+  background: rgba(212, 160, 23, .12);
+  color: var(--gold-dark);
+}
+.chip input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* An icon inside the field, so each row reads at a glance. */
+.field-wrap { position: relative; }
+.field-ico {
+  position: absolute;
+  left: 15px;
+  bottom: 15px;
+  display: grid;
+  place-items: center;
+  color: #a8adbd;
+  pointer-events: none;
+  transition: color .2s;
+}
+.field-wrap input { padding-left: 42px; }
+.field-wrap:focus-within .field-ico { color: var(--gold-dark); }
+
+.form__foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.form__reply {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .85rem;
+  color: var(--body);
+}
+.form__reply svg { color: var(--gold-dark); flex: none; }
+
+.contact-list__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--gold-light);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.contact-list__link:hover { color: #fff; }
+.contact-list__link svg { transition: transform .2s; }
+.contact-list__link:hover svg { transform: translateX(3px); }
+/* Fields on white with a soft gold ring on focus: it is clearer which row you
+   are in than a border colour change alone. */
+.contact-form-card .form input,
+.contact-form-card .form textarea { background: #fff; }
+.contact-form-card .form input:focus,
+.contact-form-card .form textarea:focus { box-shadow: 0 0 0 4px rgba(212, 160, 23, .14); }
+/* The button now shares a row with the reply note, so both start at the left. */
+.contact-form-card .form button[type="submit"] { justify-self: start; }
+.contact-form-card .form__note { text-align: left; }
+
 .contact-form-card h2 { font-size: clamp(1.5rem, 2.4vw, 2rem); }
 .contact-form-card > p { margin-bottom: 28px; }
 /* The card already provides the frame, so the form inside stays flat. */
