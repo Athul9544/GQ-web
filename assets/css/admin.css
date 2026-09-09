@@ -95,6 +95,127 @@
 
 .admin__main { padding: 34px 20px 70px; display: grid; gap: 26px; }
 
+/* Hub ---------------------------------------------------------------------- */
+/* The landing view: one card per area of the site that can be edited, each
+   carrying its own count so the state of the content is legible at a glance. */
+.hub__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+.hub__head h1 { font-size: 1.75rem; margin-bottom: .25rem; }
+.hub__head p { font-size: .93rem; margin: 0; }
+
+.hub__actions { display: flex; gap: 10px; }
+.hub__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: .86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, box-shadow .2s;
+}
+.hub__btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-dark);
+  box-shadow: 0 6px 18px rgba(13, 17, 32, .07);
+}
+
+.hub__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+}
+.hub__card {
+  display: flex;
+  flex-direction: column;
+  padding: 26px 28px 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.hub__card:hover {
+  border-color: rgba(212, 160, 23, .5);
+  box-shadow: 0 14px 34px rgba(13, 17, 32, .08);
+  transform: translateY(-2px);
+}
+.hub__card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+.hub__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(212, 160, 23, .13);
+  color: var(--gold-dark);
+}
+/* Large but recessive: the number is a texture in the corner of the card,
+   not something competing with the title. */
+.hub__count {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: rgba(212, 160, 23, .34);
+}
+.hub__card h2 { font-size: 1.15rem; margin-bottom: .5rem; }
+.hub__card p { font-size: .9rem; margin: 0 0 20px; }
+
+.hub__manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-dark);
+  font-family: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.hub__manage svg { transition: transform .2s; }
+.hub__manage:hover svg { transform: translateX(4px); }
+
+.hub__status {
+  margin: 26px 0 0;
+  font-size: .82rem;
+  color: #8a90a3;
+}
+
+.hub__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8a90a3;
+  font-family: inherit;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hub__back:hover { color: var(--gold-dark); }
+
 .admin__panel {
   padding: 30px;
   border: 1px solid var(--line);

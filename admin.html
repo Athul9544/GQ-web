@@ -6,8 +6,8 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Blog Admin - Golden Qube</title>
 <link rel="icon" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/style.css?v=svcstack78">
-<link rel="stylesheet" href="assets/css/admin.css?v=svcstack78">
+<link rel="stylesheet" href="assets/css/style.css?v=svcstack79">
+<link rel="stylesheet" href="assets/css/admin.css?v=svcstack79">
 </head>
 <body class="admin-body">
 
@@ -33,13 +33,89 @@
       <span>Blog Admin</span>
     </div>
     <div class="admin__bar-actions">
-      <a class="btn btn--outline btn--sm" href="blog.html" target="_blank" rel="noopener">View Blog</a>
       <button class="btn btn--sm" id="new-post" type="button">New Post</button>
       <button class="admin__signout" id="signout" type="button">Sign out</button>
     </div>
   </header>
 
   <main class="admin__main container">
+
+    <!-- hub --------------------------------------------------------------- -->
+    <section class="hub" id="hub">
+      <div class="hub__head">
+        <div>
+          <h1>Content Admin</h1>
+          <p>Manage the entries shown on the site.</p>
+        </div>
+        <div class="hub__actions">
+          <a class="hub__btn" href="blog.html" target="_blank" rel="noopener">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            View site
+          </a>
+          <button class="hub__btn" id="export" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <div class="hub__grid">
+        <article class="hub__card">
+          <div class="hub__card-top">
+            <span class="hub__icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+                <path d="M8 13h8"/><path d="M8 17h5"/>
+              </svg>
+            </span>
+            <span class="hub__count" id="count-posts">00</span>
+          </div>
+          <h2>Blog</h2>
+          <p>Articles on the Blog page. Write the text, upload a cover image, publish.</p>
+          <button class="hub__manage" type="button" data-open="posts">
+            Manage
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+        </article>
+
+        <article class="hub__card">
+          <div class="hub__card-top">
+            <span class="hub__icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="m21 15-5-5L5 21"/>
+              </svg>
+            </span>
+            <span class="hub__count" id="count-images">00</span>
+          </div>
+          <h2>Cover images</h2>
+          <p>One per post, resized and compressed in the browser before upload. Edited inside the post it belongs to.</p>
+          <button class="hub__manage" type="button" data-open="posts">
+            Manage
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+        </article>
+      </div>
+
+      <p class="hub__status" id="hub-status" hidden></p>
+    </section>
+
+    <!-- posts ------------------------------------------------------------- -->
+    <div id="posts-view" hidden>
+      <button class="hub__back" id="back-to-hub" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+        Content Admin
+      </button>
 
     <!-- editor ------------------------------------------------------------ -->
     <section class="admin__panel" id="editor" hidden>
@@ -72,7 +148,7 @@
             <input type="file" id="image" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
             <div class="dropzone__empty" id="dropzone-empty">
               <strong>Choose an image</strong>
-              <span>or drag one here â€” PNG, JPG, WebP or GIF, up to 3 MB</span>
+              <span>or drag one here — PNG, JPG, WebP or GIF, up to 3 MB</span>
             </div>
             <div class="dropzone__preview" id="dropzone-preview" hidden>
               <img id="preview-img" alt="Selected image preview">
@@ -97,12 +173,13 @@
       </div>
       <div id="post-list" class="post-list"></div>
     </section>
+    </div>
 
   </main>
 </div>
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="assets/js/admin.js?v=svcstack78"></script>
+<script src="assets/js/admin.js?v=svcstack79"></script>
 </body>
 </html>

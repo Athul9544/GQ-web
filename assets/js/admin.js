@@ -79,8 +79,71 @@
   function showAdmin() {
     loginView.hidden = true;
     adminView.hidden = false;
+    showHub();
     loadPosts();
+    loadStatus();
   }
+
+  /* ------------------------------------------------------------------- hub */
+  /* The landing view. Every card counts something real, so the numbers come
+     from the posts themselves rather than being stored anywhere. */
+
+  var hub = $('hub');
+  var postsView = $('posts-view');
+
+  function showHub() {
+    postsView.hidden = true;
+    hub.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function showPosts() {
+    hub.hidden = true;
+    postsView.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  document.querySelectorAll('[data-open="posts"]').forEach(function (btn) {
+    btn.addEventListener('click', showPosts);
+  });
+  $('back-to-hub').addEventListener('click', function () { closeEditor(); showHub(); });
+
+  /* Where the live site actually is. Worth stating: a post is committed the
+     moment it is saved, but its image is only served once that commit has
+     redeployed. */
+  function loadStatus() {
+    fetch('/api/status', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (s) {
+        if (!s || !s.deployment) return;
+        var note = $('hub-status');
+        note.textContent = 'Serving commit ' + s.deployment.commit + ' on ' +
+                           s.deployment.branch + '. A new post shows up straight away; ' +
+                           'its image follows once the deploy finishes, about a minute.';
+        note.hidden = false;
+      })
+      .catch(function () { /* local server has no status endpoint */ });
+  }
+
+  /* Everything the site knows about the posts, as a file. */
+  $('export').addEventListener('click', function () {
+    api('GET', '/api/posts')
+      .then(function (posts) {
+        var blob = new Blob([JSON.stringify(posts, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'golden-qube-posts.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        toast('Exported ' + posts.length + ' post' + (posts.length === 1 ? '' : 's'));
+      })
+      .catch(function (err) { toast(err.message, true); });
+  });
 
   /* ------------------------------------------------------------ post list */
 
@@ -92,6 +155,8 @@
 
   function renderPosts(posts) {
     $('post-count').textContent = posts.length;
+    $('count-posts').textContent = pad(posts.length);
+    $('count-images').textContent = pad(posts.filter(function (p) { return !!p.image; }).length);
     var list = $('post-list');
 
     if (!posts.length) {
@@ -180,7 +245,8 @@
     showPreview(null);
   }
 
-  $('new-post').addEventListener('click', function () { openEditor(null); });
+  // New Post is reachable from the hub as well as the list, so it moves there.
+  $('new-post').addEventListener('click', function () { showPosts(); openEditor(null); });
   $('cancel-edit').addEventListener('click', closeEditor);
   $('cancel-edit-2').addEventListener('click', closeEditor);
 
