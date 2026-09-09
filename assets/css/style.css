@@ -2491,6 +2491,25 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   transform: translate(0, -50%);
   transition-delay: .12s;
 }
+/* The rows are staggered rather than stacked: the first sits to the right, the
+   second to the left, the third to the right again, so the eye zigzags down the
+   list. The panel that opens on hover moves to whichever side the row leans
+   away from, so it always has the room it needs. */
+.team-row:nth-child(odd) .team-row__inner { justify-content: flex-end; }
+.team-row:nth-child(even) .team-row__inner { justify-content: flex-start; }
+
+.team-row:nth-child(odd) .team-row__meta {
+  right: auto;
+  left: 0;
+  padding-left: 0;
+  padding-right: 26px;
+  text-align: right;
+  transform: translate(10px, -50%);
+}
+.team-row:nth-child(odd):hover .team-row__meta,
+.team-row:nth-child(odd):focus-within .team-row__meta,
+.team-row:nth-child(odd).is-lit .team-row__meta { transform: translate(0, -50%); }
+
 .team-row__role {
   display: block;
   margin-bottom: 8px;
@@ -2555,6 +2574,21 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .team-row.is-lit .team-row__meta { transform: none; }
   .team-row__role { margin-bottom: 5px; font-size: .7rem; }
   .team-row__bio { font-size: .74rem; line-height: 1.5; }
+
+  /* No room to lean on a phone: the rows go back to centred, with the role and
+     bio in the band below the name. */
+  .team-row:nth-child(odd) .team-row__inner,
+  .team-row:nth-child(even) .team-row__inner { justify-content: center; }
+  .team-row:nth-child(odd) .team-row__meta {
+    left: 0;
+    right: 0;
+    padding: 0 6px;
+    text-align: center;
+    transform: translateY(10px);
+  }
+  .team-row:nth-child(odd):hover .team-row__meta,
+  .team-row:nth-child(odd):focus-within .team-row__meta,
+  .team-row:nth-child(odd).is-lit .team-row__meta { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
