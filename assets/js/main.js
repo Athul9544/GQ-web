@@ -83,6 +83,7 @@
     initDmaptAccordion();
     initPointGroups();
     initFooterMark();
+    initFooterCubes();
     initZoomOut();
     initHorizontalSlide();
   });
@@ -150,6 +151,147 @@
     window.addEventListener('resize', refit);
     // Web fonts land after this runs and change the metrics underneath it.
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  }
+
+  /* ----------------------------------------------------------- footer drift */
+  /* A slow field of golden cubes behind the footer. Depth does the work: the
+     ones nearest the viewer are large, soft and dim, the far ones small and
+     sharp, so the field reads as atmosphere rather than as shapes crossing the
+     screen. Each cube is drawn once into its own small canvas and then only
+     blitted, which keeps the per-frame cost to a set of drawImage calls. */
+  function initFooterCubes() {
+    var footer = document.querySelector('.footer');
+    if (!footer || !window.requestAnimationFrame) return;
+
+    var canvas = document.createElement('canvas');
+    canvas.className = 'footer__cubes';
+    canvas.setAttribute('aria-hidden', 'true');
+    footer.insertBefore(canvas, footer.firstChild);
+
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var cubes = [];
+    var w = 0;
+    var h = 0;
+    var dpr = 1;
+    var running = false;
+
+    /* One isometric cube: a lit top face, a mid-tone left and a dark right.
+       Drawn oversized and blurred here so the blur never costs anything later. */
+    function sprite(size, blur, lit) {
+      var pad = Math.ceil(blur * 2.5) + 2;
+      var c = document.createElement('canvas');
+      c.width = c.height = Math.ceil(size * 2 + pad * 2);
+      var g = c.getContext('2d');
+      var cx = c.width / 2;
+      var cy = c.height / 2;
+
+      if (blur && 'filter' in g) g.filter = 'blur(' + blur.toFixed(1) + 'px)';
+
+      var x = size * 0.866;
+      var y = size * 0.5;
+
+      function face(points, fill) {
+        g.beginPath();
+        g.moveTo(cx + points[0][0], cy + points[0][1]);
+        for (var i = 1; i < points.length; i++) g.lineTo(cx + points[i][0], cy + points[i][1]);
+        g.closePath();
+        g.fillStyle = fill;
+        g.fill();
+      }
+
+      face([[0, -size], [x, -y], [0, 0], [-x, -y]], lit ? '#ffe9a8' : '#e8c35c');
+      face([[-x, -y], [0, 0], [0, size], [-x, y]], lit ? '#d9a72a' : '#a9801d');
+      face([[x, -y], [x, y], [0, size], [0, 0]], lit ? '#a87c1c' : '#6d5111');
+      return c;
+    }
+
+    function build() {
+      var area = w * h;
+      var count = Math.max(30, Math.min(130, Math.round(area / 11000)));
+      cubes = [];
+
+      for (var i = 0; i < count; i++) {
+        // Depth: 0 is the far distance, 1 is right under the lens.
+        var z = Math.pow(Math.random(), 1.7);
+        var size = 3 + z * 22;
+        var blur = z < 0.4 ? 0 : (z - 0.4) * 13;
+        var lit = Math.random() < 0.18;
+
+        cubes.push({
+          img: sprite(size, blur, lit),
+          x: Math.random() * w,
+          y: Math.random() * h,
+          // Nearer cubes travel faster, which is what sells the depth.
+          vx: -(0.06 + z * 0.30),
+          vy: -(0.10 + z * 0.42),
+          // Mostly barely there. Only the few lit ones read as solid objects.
+          alpha: lit ? 0.26 + z * 0.30 : 0.07 + z * 0.17
+        });
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < cubes.length; i++) {
+        var c = cubes[i];
+        ctx.globalAlpha = c.alpha;
+        ctx.drawImage(c.img, c.x - c.img.width / 2, c.y - c.img.height / 2);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function step() {
+      if (!running) return;
+      for (var i = 0; i < cubes.length; i++) {
+        var c = cubes[i];
+        var edge = c.img.width;
+        c.x += c.vx;
+        c.y += c.vy;
+        // Off the top or the left edge, and it returns on the other side.
+        if (c.y < -edge) { c.y = h + edge; c.x = Math.random() * w; }
+        if (c.x < -edge) { c.x = w + edge; c.y = Math.random() * h; }
+      }
+      draw();
+      requestAnimationFrame(step);
+    }
+
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = footer.clientWidth;
+      h = footer.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+      draw();
+    }
+
+    /* Nothing runs while the footer is off screen, which is most of the time. */
+    function watch() {
+      if (!window.IntersectionObserver) { start(); return; }
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) start(); else running = false;
+      }, { rootMargin: '120px' }).observe(footer);
+    }
+
+    function start() {
+      if (running || still) return;
+      running = true;
+      requestAnimationFrame(step);
+    }
+
+    size();
+    if (!still) watch();
+
+    var queued = false;
+    window.addEventListener('resize', function () {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(function () { queued = false; size(); });
+    });
   }
 
   /* --------------------------------------------------- horizontal hand-off */
