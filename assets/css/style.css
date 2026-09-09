@@ -2549,48 +2549,47 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
    two halves of the name. Only the sizes change, and the role and bio drop
    below the name instead of sitting beside it, where there is no room. */
 @media (max-width: 700px) {
-  /* The name and portrait still centre, but within the upper part of the row —
-     the padding reserves the band the role and bio drop into. */
-  .team-row__inner { min-height: 256px; padding-bottom: 96px; }
+  /* The padding reserves the band the role and bio drop into. It has to clear
+     five lines of text now that they sit under the name rather than across the
+     row, or the role rides up over the portrait. */
+  .team-row__inner { min-height: 300px; padding-bottom: 140px; }
   .team-row__photo { --team-w: 96px; height: 122px; margin: 0 7px; }
   .team-row:hover .team-row__photo,
   .team-row:focus-within .team-row__photo,
   .team-row.is-lit .team-row__photo { margin: 0 13px; }
   .team-row__name { font-size: clamp(1.2rem, 6.4vw, 1.75rem); }
 
+  /* The rows lean here too. The role and bio still drop into the band below
+     the name - there is no room beside it - but they take the same side the
+     name leans to and stop short of the far edge, so each block of text sits
+     under its own name rather than spanning the row. */
+  .team-row:nth-child(odd) .team-row__inner { justify-content: flex-end; }
+  .team-row:nth-child(even) .team-row__inner { justify-content: flex-start; }
+  .team-row__inner { padding-left: 4px; padding-right: 4px; }
+
   .team-row__meta,
   .team-row.is-lit .team-row__meta {
-    left: 0;
-    right: 0;
+    left: auto;
+    right: 4px;
     top: auto;
     bottom: 20px;
     width: auto;
-    padding: 0 6px;
-    text-align: center;
+    max-width: 82%;
+    padding: 0;
+    text-align: right;
     transform: translateY(10px);
+  }
+  .team-row:nth-child(even) .team-row__meta,
+  .team-row:nth-child(even).is-lit .team-row__meta {
+    right: auto;
+    left: 4px;
+    text-align: left;
   }
   .team-row:hover .team-row__meta,
   .team-row:focus-within .team-row__meta,
   .team-row.is-lit .team-row__meta { transform: none; }
   .team-row__role { margin-bottom: 5px; font-size: .7rem; }
   .team-row__bio { font-size: .74rem; line-height: 1.5; }
-
-  /* The rows lean here too. Only the role and bio change place: there is no
-     room for them beside a name on a phone, so they drop into the band below
-     it, centred, the way they already did. */
-  .team-row:nth-child(odd) .team-row__inner { justify-content: flex-end; }
-  .team-row:nth-child(even) .team-row__inner { justify-content: flex-start; }
-  .team-row__inner { padding-left: 4px; padding-right: 4px; }
-  .team-row:nth-child(odd) .team-row__meta {
-    left: 0;
-    right: 0;
-    padding: 0 6px;
-    text-align: center;
-    transform: translateY(10px);
-  }
-  .team-row:nth-child(odd):hover .team-row__meta,
-  .team-row:nth-child(odd):focus-within .team-row__meta,
-  .team-row:nth-child(odd).is-lit .team-row__meta { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
