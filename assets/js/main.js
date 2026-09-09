@@ -3,6 +3,36 @@
 (function () {
   'use strict';
 
+  /* ------------------------------------------------------------- scheduler */
+  /* One scroll listener and one animation frame for the whole page. Each
+     scroll-driven effect registers an updater here instead of binding its own
+     listener, so a scroll costs a single callback and a single style pass
+     rather than one of each per effect. The listener is passive, so it never
+     holds up the compositor. */
+  var frameJobs = [];
+  var framePending = false;
+
+  function runFrame() {
+    framePending = false;
+    for (var i = 0; i < frameJobs.length; i++) frameJobs[i]();
+  }
+
+  function scheduleFrame() {
+    if (framePending) return;
+    framePending = true;
+    requestAnimationFrame(runFrame);
+  }
+
+  /** Register an updater to run once per frame while the page is scrolling. */
+  function onScrollFrame(job) {
+    frameJobs.push(job);
+    job();                                  // place it correctly straight away
+  }
+
+  window.addEventListener('scroll', scheduleFrame, { passive: true });
+  window.addEventListener('resize', scheduleFrame, { passive: true });
+  window.addEventListener('orientationchange', scheduleFrame, { passive: true });
+
   /* ---------------------------------------------------------------- icons */
   var SPRITE = [
     '<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">',
@@ -161,7 +191,6 @@
     if (!tracks.length) return;
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var ticking = false;
 
     function stage(raw, from, to) {
       var v = (raw - from) / (to - from);
@@ -171,7 +200,6 @@
     }
 
     function update() {
-      ticking = false;
       for (var i = 0; i < tracks.length; i++) {
         var el = tracks[i];
         var rect = el.getBoundingClientRect();
@@ -187,15 +215,7 @@
       }
     }
 
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
+    onScrollFrame(update);
   }
 
   /* Where each move sits along a track's travel, keyed by its data-hslide
@@ -224,10 +244,8 @@
     if (!tracks.length) return;
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var ticking = false;
 
     function update() {
-      ticking = false;
       for (var i = 0; i < tracks.length; i++) {
         var rect = tracks[i].getBoundingClientRect();
         var travel = rect.height - window.innerHeight;
@@ -243,15 +261,7 @@
       }
     }
 
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
+    onScrollFrame(update);
   }
 
   /* --------------------------------------------------------- feature points */
@@ -380,10 +390,8 @@
     if (cards.length < 2) return;
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var ticking = false;
 
     function update() {
-      ticking = false;
       // Sticky is switched off on narrow/short viewports; keep the cards flat.
       if (window.innerWidth <= 760 || window.innerHeight <= 620) {
         for (var j = 0; j < cards.length; j++) cards[j].style.setProperty('--svc-p', '0');
@@ -399,15 +407,7 @@
       }
     }
 
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
+    onScrollFrame(update);
   }
 
   /* ------------------------------------------------------------- blog feed */
@@ -616,14 +616,7 @@
       }
     }
 
-    var ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(fromScroll);
-    }
     function fromScroll() {
-      ticking = false;
       var length = span();
       if (length <= 0) return;
       var p = -track.getBoundingClientRect().top / length;
@@ -697,8 +690,8 @@
       else if (i > -1) stepTo(i);
     });
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', sizeTrack);
+    onScrollFrame(fromScroll);
+    window.addEventListener('resize', sizeTrack, { passive: true });
 
     layout();
     sizeTrack();
@@ -742,9 +735,15 @@
     }
 
     if (header) {
-      window.addEventListener('scroll', function () {
-        header.classList.toggle('is-stuck', window.scrollY > 10);
-      }, { passive: true });
+      // Only touch the class when the state actually changes: writing it on
+      // every scroll event invalidates style for the whole header each time.
+      var stuck = null;
+      onScrollFrame(function () {
+        var now = window.pageYOffset > 10;
+        if (now === stuck) return;
+        stuck = now;
+        header.classList.toggle('is-stuck', now);
+      });
     }
   }
 

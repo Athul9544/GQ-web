@@ -909,7 +909,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   /* One standard banner height across every inner page. */
   min-height: 400px;
   padding: 100px 0;
-  background: var(--ink) url("../img/breadcrumb-bg.png") center/cover no-repeat;
+  background: var(--ink) url("../img/breadcrumb-bg.webp") center/cover no-repeat;
   text-align: center;
   color: rgba(255, 255, 255, .72);
 }
@@ -1723,12 +1723,18 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
 /* Entrance animations ------------------------------------------------------ */
 /* Text rises into place; media settles out of a slight zoom. Classes are
-   applied by main.js, so markup stays clean. */
+   applied by main.js, so markup stays clean.
+
+   Deliberately no will-change on these two. They are applied to every heading,
+   paragraph and image in an animated zone - well over a hundred elements on a
+   long page - and a standing hint puts each on its own compositor layer for the
+   life of the page, which is what makes a long page stutter on a phone. The
+   browser promotes an element for the duration of a transform/opacity
+   transition anyway, which is the only time the layer earns its keep. */
 .anim-text {
   opacity: 0;
   transform: translateY(22px);
   transition: opacity .7s cubic-bezier(.22, .68, .28, 1), transform .7s cubic-bezier(.22, .68, .28, 1);
-  will-change: opacity, transform;
 }
 .anim-text.is-in { opacity: 1; transform: none; }
 
@@ -1736,7 +1742,6 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   opacity: 0;
   transform: translateY(20px) scale(.97);
   transition: opacity .75s cubic-bezier(.22, .68, .28, 1), transform .75s cubic-bezier(.22, .68, .28, 1);
-  will-change: opacity, transform;
 }
 .anim-media.is-in { opacity: 1; transform: none; }
 

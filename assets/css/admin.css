@@ -10,7 +10,7 @@
   place-items: center;
   min-height: 100vh;
   padding: 24px;
-  background: var(--ink) url("../img/footer-bg.png") center/cover no-repeat;
+  background: var(--ink) url("../img/footer-bg.webp") center/cover no-repeat;
 }
 .login::before { content: ""; position: fixed; inset: 0; background: rgba(13, 17, 32, .9); }
 
