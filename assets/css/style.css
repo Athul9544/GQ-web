@@ -1395,6 +1395,67 @@ ul { margin: 0; padding: 0; list-style: none; }
 .legal h2 { font-size: 1.5rem; margin-top: 2.2rem; }
 .legal ul { list-style: disc; padding-left: 22px; display: grid; gap: 8px; margin-bottom: 1.2rem; }
 
+/* Liquid edge ---------------------------------------------------------------
+   The page does not meet the footer on a straight line; it settles into it.
+   Three copies of the same wave are tiled across the width and drift at
+   different speeds and opacities, which reads as depth in a body of liquid
+   rather than as one shape sliding past.
+
+   Only transform is animated, on three elements, so the whole thing lives on
+   the compositor and costs no layout or paint per frame. */
+.wave {
+  position: relative;
+  height: clamp(54px, 7vw, 110px);
+  overflow: hidden;
+  line-height: 0;
+  /* Closes the hairline that rounding can leave against the footer. */
+  margin-bottom: -1px;
+  pointer-events: none;
+}
+
+.wave__layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  /* One tile spans the element, so a -50% shift lands exactly one tile on. */
+  background-size: 50% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201200%20120'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0,60%20C150,120%20350,0%20600,60%20C850,120%201050,0%201200,60%20L1200,120%20L0,120%20Z'%20fill='%230d1120'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: wave-drift 11s linear infinite;
+}
+
+/* The two behind stand taller and fainter than the solid one, so their crests
+   break above it rather than hiding behind it, and one runs the other way so
+   the crests keep meeting in new places instead of marching in step. */
+.wave__layer--back {
+  opacity: .28;
+  height: 100%;
+  animation-duration: 27s;
+}
+.wave__layer--mid {
+  opacity: .5;
+  height: 90%;
+  animation-duration: 17s;
+  animation-direction: reverse;
+}
+.wave__layer--front {
+  opacity: 1;
+  height: 78%;
+}
+
+@keyframes wave-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave__layer { animation: none; will-change: auto; }
+}
+
 /* Footer ------------------------------------------------------------------- */
 .footer {
   position: relative;
