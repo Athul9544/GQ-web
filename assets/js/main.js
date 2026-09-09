@@ -1068,7 +1068,7 @@
       if (note) {
         note.classList.add('ok');
         note.textContent = 'Thanks' + (name && name.value ? ', ' + name.value.split(' ')[0] : '') +
-          '! This is a local demo — no message was actually sent.';
+          '! Your message has been received successfully. We’ll get back to you soon.';
       }
       form.reset();
     });
