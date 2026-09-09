@@ -957,10 +957,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .contact-form-card .form input:focus,
 .contact-form-card .form textarea:focus { box-shadow: 0 0 0 4px rgba(212, 160, 23, .14); }
 .contact-form-card h2 { font-size: clamp(1.5rem, 2.4vw, 2rem); }
-/* Two lines of intro: they read as one paragraph, so only the last one carries
-   the gap down to the form. */
-.contact-form-card > p { margin-bottom: 8px; }
-.contact-form-card > p:last-of-type { margin-bottom: 28px; }
+.contact-form-card > p { margin-bottom: 28px; }
 /* The card already provides the frame, so the form inside stays flat. */
 .contact-form-card .form { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
 
