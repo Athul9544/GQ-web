@@ -2575,10 +2575,12 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .team-row__role { margin-bottom: 5px; font-size: .7rem; }
   .team-row__bio { font-size: .74rem; line-height: 1.5; }
 
-  /* No room to lean on a phone: the rows go back to centred, with the role and
-     bio in the band below the name. */
-  .team-row:nth-child(odd) .team-row__inner,
-  .team-row:nth-child(even) .team-row__inner { justify-content: center; }
+  /* The rows lean here too. Only the role and bio change place: there is no
+     room for them beside a name on a phone, so they drop into the band below
+     it, centred, the way they already did. */
+  .team-row:nth-child(odd) .team-row__inner { justify-content: flex-end; }
+  .team-row:nth-child(even) .team-row__inner { justify-content: flex-start; }
+  .team-row__inner { padding-left: 4px; padding-right: 4px; }
   .team-row:nth-child(odd) .team-row__meta {
     left: 0;
     right: 0;
