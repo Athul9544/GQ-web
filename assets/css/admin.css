@@ -131,9 +131,11 @@
   box-shadow: 0 6px 18px rgba(13, 17, 32, .07);
 }
 
+/* Capped rather than fluid, so a lone card keeps a card's proportions instead
+   of stretching the width of the page. */
 .hub__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(290px, 430px));
   gap: 22px;
 }
 .hub__card {

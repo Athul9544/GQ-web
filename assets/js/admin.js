@@ -156,7 +156,6 @@
   function renderPosts(posts) {
     $('post-count').textContent = posts.length;
     $('count-posts').textContent = pad(posts.length);
-    $('count-images').textContent = pad(posts.filter(function (p) { return !!p.image; }).length);
     var list = $('post-list');
 
     if (!posts.length) {
