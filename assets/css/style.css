@@ -2498,17 +2498,21 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 .team-row:nth-child(odd) .team-row__inner { justify-content: flex-end; }
 .team-row:nth-child(even) .team-row__inner { justify-content: flex-start; }
 
-.team-row:nth-child(odd) .team-row__meta {
-  right: auto;
-  left: 0;
-  padding-left: 0;
-  padding-right: 26px;
-  text-align: right;
-  transform: translate(10px, -50%);
+/* Only where the panel sits beside the name. Below this width it moves under
+   the name instead, and these would drag it back up over the portrait. */
+@media (min-width: 701px) {
+  .team-row:nth-child(odd) .team-row__meta {
+    right: auto;
+    left: 0;
+    padding-left: 0;
+    padding-right: 26px;
+    text-align: right;
+    transform: translate(10px, -50%);
+  }
+  .team-row:nth-child(odd):hover .team-row__meta,
+  .team-row:nth-child(odd):focus-within .team-row__meta,
+  .team-row:nth-child(odd).is-lit .team-row__meta { transform: translate(0, -50%); }
 }
-.team-row:nth-child(odd):hover .team-row__meta,
-.team-row:nth-child(odd):focus-within .team-row__meta,
-.team-row:nth-child(odd).is-lit .team-row__meta { transform: translate(0, -50%); }
 
 .team-row__role {
   display: block;
@@ -2549,10 +2553,17 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
    two halves of the name. Only the sizes change, and the role and bio drop
    below the name instead of sitting beside it, where there is no room. */
 @media (max-width: 700px) {
-  /* The padding reserves the band the role and bio drop into. It has to clear
-     five lines of text now that they sit under the name rather than across the
-     row, or the role rides up over the portrait. */
-  .team-row__inner { min-height: 300px; padding-bottom: 140px; }
+  /* On a phone the role and bio come out of their absolute corner and back
+     into the flow, wrapping onto their own line under the name. The row then
+     sizes itself around them, so the gap is a row-gap rather than whatever is
+     left over inside a reserved band - which is what made the text sit so far
+     from the name it belongs to. */
+  .team-row__inner {
+    flex-wrap: wrap;
+    min-height: 0;
+    padding: 26px 4px 30px;
+    row-gap: 12px;
+  }
   .team-row__photo { --team-w: 96px; height: 122px; margin: 0 7px; }
   .team-row:hover .team-row__photo,
   .team-row:focus-within .team-row__photo,
@@ -2569,20 +2580,21 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 
   .team-row__meta,
   .team-row.is-lit .team-row__meta {
-    left: auto;
-    right: 4px;
-    top: auto;
-    bottom: 20px;
+    position: static;
+    flex: 0 0 100%;
     width: auto;
-    max-width: 82%;
+    max-width: 84%;
     padding: 0;
+    /* Pushed to the side its name leans to. */
+    margin-left: auto;
+    margin-right: 0;
     text-align: right;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   .team-row:nth-child(even) .team-row__meta,
   .team-row:nth-child(even).is-lit .team-row__meta {
-    right: auto;
-    left: 4px;
+    margin-left: 0;
+    margin-right: auto;
     text-align: left;
   }
   .team-row:hover .team-row__meta,
