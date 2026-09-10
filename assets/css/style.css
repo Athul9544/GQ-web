@@ -1036,6 +1036,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .month:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(212, 160, 23, .4); }
 .month:hover::before { transform: scaleX(1); }
 
+/* Grid items stretch to the tallest by default, and month 2 carries far more
+   of the syllabus than the other two — which left the short cards with a band
+   of empty white under their last chip. Each card ends where its own content
+   ends instead. */
+#curriculum .grid { align-items: start; }
+
 .month__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .month__no {
   font-size: 2.6rem;
