@@ -113,6 +113,7 @@
     initDmaptAccordion();
     initPointGroups();
     initFooterMark();
+    initCertRing();
     initZoomOut();
     initHorizontalSlide();
   });
@@ -180,6 +181,58 @@
     window.addEventListener('resize', refit);
     // Web fonts land after this runs and change the metrics underneath it.
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  }
+
+  /* --------------------------------------------------- certification ring */
+  /* Two moves on one pin. The first two thirds of the track turn the ring most
+     of the way round; the last third lays it flat and lets the badges leave it
+     for a grid, each one a little after the one before. Both are written as
+     custom properties and read by CSS — this only reports the scroll. */
+  function initCertRing() {
+    var track = document.getElementById('certifications');
+    if (!track) return;
+    var ring = track.querySelector('.certs__ring');
+    if (!ring) return;
+
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var flatOnly = window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
+
+    /* No pin on a phone, and none for reduced motion: the badges are laid out
+       as a plain grid by CSS, so leave the properties alone. */
+    if (still || flatOnly) {
+      track.style.height = 'auto';
+      return;
+    }
+
+    var SPIN_END = 0.62;          // the ring has finished turning by here
+    var TURNS = 460;              // degrees it covers on the way
+
+    function update() {
+      var span = track.offsetHeight - window.innerHeight;
+      if (span <= 0) return;
+
+      var p = -track.getBoundingClientRect().top / span;
+      if (p < 0) p = 0;
+      if (p > 1) p = 1;
+
+      var spin = Math.min(p / SPIN_END, 1) * TURNS;
+      var flat = (p - SPIN_END) / (1 - SPIN_END);
+      if (flat < 0) flat = 0;
+      if (flat > 1) flat = 1;
+
+      ring.style.setProperty('--spin', (-spin).toFixed(2) + 'deg');
+      ring.style.setProperty('--flat', flat.toFixed(4));
+    }
+
+    function size() {
+      // A screen and a half of scrolling to turn, one more to unpack.
+      track.style.height = Math.round(window.innerHeight * 2.6) + 'px';
+      update();
+    }
+
+    onScrollFrame(update);
+    window.addEventListener('resize', size, { passive: true });
+    size();
   }
 
   /* --------------------------------------------------- horizontal hand-off */

@@ -7,7 +7,7 @@
 <meta name="description" content="International Standard Digital Marketing Training for Students — a 3-month AI-driven course in Kochi covering SMM, SEO, Google Ads, automation and more.">
 <link rel="preload" as="image" href="assets/img/academy-hero.webp" fetchpriority="high">
 <link rel="icon" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/style.css?v=svcstack119">
+<link rel="stylesheet" href="assets/css/style.css?v=svcstack120">
 </head>
 <body>
 
@@ -242,7 +242,11 @@
 </section>
 
 <!-- ===================================================== certifications -->
-<section class="section certs">
+<!-- Pinned while it plays: main.js turns the scroll through this track into
+     --spin (the ring turning) and then --flat (the badges leaving it for a
+     grid, one after another). -->
+<section class="certs certs-track" id="certifications">
+  <div class="certs__pin">
   <div class="container">
     <div class="sec-head reveal">
       <h2 class="certs__title">Industry Recognized Certifications</h2>
@@ -252,37 +256,37 @@
          below 700px the ring flattens back into a plain grid. -->
     <div class="certs__stage reveal">
       <div class="certs__ring">
-      <div class="cert" style="--i:0">
+      <div class="cert" style="--i:0;--col:0;--row:0">
         <div class="cert__face">
           <img src="assets/img/tools/hubspot.svg" alt="" loading="lazy" decoding="async">
           <span>HubSpot</span>
         </div>
       </div>
-      <div class="cert" style="--i:1">
+      <div class="cert" style="--i:1;--col:1;--row:0">
         <div class="cert__face">
           <svg class="cert__mark" width="42" height="42" aria-hidden="true"><use href="#i-google-g"></use></svg>
           <span>Google</span>
         </div>
       </div>
-      <div class="cert" style="--i:2">
+      <div class="cert" style="--i:2;--col:2;--row:0">
         <div class="cert__face">
           <img src="assets/img/tools/linkedin.svg" alt="" loading="lazy" decoding="async">
           <span>LinkedIn</span>
         </div>
       </div>
-      <div class="cert" style="--i:3">
+      <div class="cert" style="--i:3;--col:0;--row:1">
         <div class="cert__face">
           <img src="assets/img/tools/semrush.svg" alt="" loading="lazy" decoding="async">
           <span>Semrush</span>
         </div>
       </div>
       <!-- The full lockup carries the name itself, so this badge has no label. -->
-      <div class="cert cert--brand" style="--i:4">
+      <div class="cert cert--brand" style="--i:4;--col:1;--row:1">
         <div class="cert__face">
           <img src="assets/img/logo-stacked.png" alt="Golden Qube" loading="lazy" decoding="async">
         </div>
       </div>
-      <div class="cert" style="--i:5">
+      <div class="cert" style="--i:5;--col:2;--row:1">
         <div class="cert__face">
           <img src="assets/img/tools/microsoft.svg" alt="" loading="lazy" decoding="async">
           <span>Microsoft</span>
@@ -290,6 +294,7 @@
       </div>
       </div>
     </div>
+  </div>
   </div>
 </section>
 
@@ -500,6 +505,6 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=svcstack119"></script>
+<script src="assets/js/main.js?v=svcstack120"></script>
 </body>
 </html>

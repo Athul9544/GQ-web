@@ -1261,10 +1261,23 @@ ul { margin: 0; padding: 0; list-style: none; }
 
    Radius for six faces: half the badge width over tan(180/6), plus a little air
    so they do not touch — 150px keeps a comfortable gap at 230px wide. */
+/* The section is pinned while it plays, and the scroll through the track is
+   what turns the ring and then unpacks it. */
+.certs-track { position: relative; padding: 0; }
+.certs__pin {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0;
+}
+
 .certs__stage {
-  perspective: 1400px;
-  perspective-origin: 50% 45%;
-  height: 330px;
+  perspective: 1150px;
+  perspective-origin: 50% 40%;
+  height: 400px;
   display: grid;
   place-items: center;
 }
@@ -1273,29 +1286,38 @@ ul { margin: 0; padding: 0; list-style: none; }
   width: 230px;
   height: 148px;
   transform-style: preserve-3d;
-  /* Tilted so the ring reads as a band seen from slightly above. */
-  transform: rotateX(-13deg);
-  animation: ring-turn 28s linear infinite;
+  /* --spin turns the ring; --flat lays it down as the badges leave it. Both are
+     written by main.js from the scroll position, so the whole sequence is tied
+     to the page rather than to a clock. */
+  transform:
+    rotateX(calc((1 - var(--flat, 0)) * -22deg))
+    rotateY(calc((1 - var(--flat, 0)) * var(--spin, 0deg)));
 }
-@keyframes ring-turn {
-  from { transform: rotateX(-13deg) rotateY(0deg); }
-  to { transform: rotateX(-13deg) rotateY(-360deg); }
-}
-/* Stop it where it is so a badge can be read, and hold it while a badge has
-   keyboard focus too. */
-.certs__stage:hover .certs__ring,
-.certs__stage:focus-within .certs__ring { animation-play-state: paused; }
 
 .certs__ring .cert {
   position: absolute;
   inset: 0;
   min-height: 0;
-  transform: rotateY(calc(var(--i) * 60deg)) translateZ(205px);
+  /* Each badge leaves on its own schedule: --q runs 0 to 1 over a window of
+     --flat that opens a little later for each one, so they land in order. */
+  --q: clamp(0, calc((var(--flat, 0) - var(--i) * 0.09) / 0.42), 1);
+  transform:
+    /* Where it is going: its slot in a three-by-two grid. */
+    translate(
+      calc(var(--q) * (var(--col) - 1) * 252px),
+      calc(var(--q) * (var(--row) - 0.5) * 170px)
+    )
+    /* What it is leaving: its place around the ring. */
+    rotateY(calc((1 - var(--q)) * var(--i) * 60deg))
+    translateZ(calc((1 - var(--q)) * 205px));
   /* Keeps the two faces below in the same 3D space as the ring. The card itself
      must NOT hide its own backface: doing that takes its children with it and
      the far half of the ring disappears rather than turning away. */
   transform-style: preserve-3d;
 }
+/* Once the badges have landed there is no back to see, and the panel would sit
+   over the grid as a dim square. */
+.certs__ring .cert::before { opacity: calc(1 - var(--flat, 0)); }
 /* The back of the badge: a plain dim panel. It is a face in its own right,
    turned to look the other way, so exactly one of the two is ever visible —
    the card's own contents never appear mirrored. */
