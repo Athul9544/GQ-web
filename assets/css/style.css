@@ -2821,6 +2821,9 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 }
 .gz__body h2 { margin-bottom: .5em; }
 .gz__body p { margin-bottom: 0; }
+/* Sized to itself rather than the column, so it reads as a button and not as
+   a bar across the copy. */
+.gz__cta { align-self: flex-start; margin-top: 20px; }
 
 /* Mirrored: the photo lands in the right column, the copy on the left, so
    consecutive blocks keep alternating the way the old feature rows did. */
