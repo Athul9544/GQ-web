@@ -1231,43 +1231,144 @@ ul { margin: 0; padding: 0; list-style: none; }
    A warm gold field the badges sit on, so the section reads as the award shelf
    of the page rather than another white band. */
 .certs { background: linear-gradient(165deg, #fdf3dd 0%, #f7dfa8 55%, #f1c977 100%); }
+/* The gold in the heading is lit rather than flat: a band of brighter gold
+   travels across the letters. The gradient is twice the width of the text and
+   only its position moves, so nothing but the paint changes. */
 .certs__title {
   text-transform: uppercase;
   font-size: clamp(1.6rem, 4vw, 2.9rem);
   line-height: 1.12;
   letter-spacing: -.01em;
-  background: linear-gradient(100deg, #8a6412 0%, #c8992a 30%, #f0d488 50%, #b8871c 72%, #8a6412 100%);
+  background-image: linear-gradient(
+    100deg,
+    #8a6412 0%, #a87c1c 28%, #f3dc9b 46%, #fff6dd 50%, #f3dc9b 54%, #a87c1c 72%, #8a6412 100%
+  );
+  background-size: 200% auto;
+  background-position: 0 center;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+  animation: cert-sheen 7s linear infinite;
+}
+@keyframes cert-sheen {
+  to { background-position: -200% center; }
 }
 
-.certs__grid {
+/* The badges ride the outside of a slowly turning ring. The stage supplies the
+   perspective, the ring holds the 3D space and does the turning, and each badge
+   is rotated to its own place around it and pushed out by the radius.
+
+   Radius for six faces: half the badge width over tan(180/6), plus a little air
+   so they do not touch — 150px keeps a comfortable gap at 230px wide. */
+.certs__stage {
+  perspective: 1400px;
+  perspective-origin: 50% 45%;
+  height: 330px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-  max-width: 900px;
-  margin: 0 auto;
+  place-items: center;
 }
+.certs__ring {
+  position: relative;
+  width: 230px;
+  height: 148px;
+  transform-style: preserve-3d;
+  /* Tilted so the ring reads as a band seen from slightly above. */
+  transform: rotateX(-13deg);
+  animation: ring-turn 28s linear infinite;
+}
+@keyframes ring-turn {
+  from { transform: rotateX(-13deg) rotateY(0deg); }
+  to { transform: rotateX(-13deg) rotateY(-360deg); }
+}
+/* Stop it where it is so a badge can be read, and hold it while a badge has
+   keyboard focus too. */
+.certs__stage:hover .certs__ring,
+.certs__stage:focus-within .certs__ring { animation-play-state: paused; }
+
+.certs__ring .cert {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  transform: rotateY(calc(var(--i) * 60deg)) translateZ(205px);
+  /* Keeps the two faces below in the same 3D space as the ring. The card itself
+     must NOT hide its own backface: doing that takes its children with it and
+     the far half of the ring disappears rather than turning away. */
+  transform-style: preserve-3d;
+}
+/* The back of the badge: a plain dim panel. It is a face in its own right,
+   turned to look the other way, so exactly one of the two is ever visible —
+   the card's own contents never appear mirrored. */
+.certs__ring .cert::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: rgba(228, 199, 143, .96);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55);
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+/* The badge is two surfaces: .cert is only the box that gets placed — in the
+   grid, or out on the ring — and .cert__face is the card you see. Keeping them
+   apart is what lets the ring show a plain back panel as a badge turns away,
+   rather than its own contents mirrored. */
 .cert {
+  position: relative;
+  min-height: 148px;
+}
+.cert__face {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
   gap: 14px;
-  min-height: 148px;
   padding: 28px 22px;
   border: 1px solid rgba(255, 255, 255, .75);
   border-radius: 18px;
   /* Frosted rather than solid, so the gold field shows through the badge. */
   background: rgba(255, 255, 255, .55);
   box-shadow: 0 12px 30px rgba(150, 104, 20, .13);
-  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transition: transform .3s cubic-bezier(.22, .68, .28, 1), box-shadow .3s ease,
+              background .3s ease, border-color .3s ease;
 }
-.cert:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, .78);
-  box-shadow: 0 18px 40px rgba(150, 104, 20, .22);
+/* Scoped through the grid on purpose: .reveal.is-visible also sets a transform
+   and is declared later in this file, so a bare .cert:hover would lose to it
+   and the badge would never lift. The delay is cleared here too — it belongs to
+   the arrival, not to the pointer. */
+.certs__grid .cert:hover .cert__face {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, .82);
+  border-color: rgba(212, 160, 23, .55);
+  box-shadow: 0 20px 44px rgba(150, 104, 20, .24);
+  transition-delay: 0s;
 }
+
+/* A bar of light crosses the badge on hover — the same gesture as a card
+   catching the light as it lifts. Transform only, so it costs a frame nothing. */
+.cert__face::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .75) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: translateX(-160%) skewX(-18deg);
+  pointer-events: none;
+}
+.certs__grid .cert:hover .cert__face::after { transition: transform .85s cubic-bezier(.3, .7, .3, 1); transform: translateX(360%) skewX(-18deg); }
+
+/* The mark lifts a little further than the card, so the badge has depth. */
+.cert img,
+.cert__mark { transition: transform .3s cubic-bezier(.22, .68, .28, 1); }
+.cert:hover img,
+.cert:hover .cert__mark { transform: translateY(-3px) scale(1.07); }
+
+/* Badges arrive one after another as the shelf comes into view. */
+.cert.reveal { transition-delay: calc(var(--i, 0) * 90ms); }
 .cert img,
 .cert__mark { width: 42px; height: 42px; object-fit: contain; }
 /* The lockup stands in for both the mark and the label, so it is sized to the
@@ -1280,12 +1381,43 @@ ul { margin: 0; padding: 0; list-style: none; }
   text-align: center;
 }
 
+/* Phones get the flat version: a 230px ring has nowhere to turn on a 390px
+   screen, so it becomes the grid the badges used to sit in. */
 @media (max-width: 700px) {
-  .certs__grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  .cert { min-height: 124px; padding: 22px 14px; gap: 10px; }
+  .certs__stage {
+    perspective: none;
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    /* The stage centres the ring on desktop; as a grid of badges it has to let
+       them fill their columns instead, or each one shrinks to its own content —
+       and the face is absolutely positioned, so that content is nothing. */
+    place-items: stretch;
+  }
+  /* The ring stops being a box and lets the badges become grid items. */
+  .certs__ring {
+    display: contents;
+    animation: none;
+  }
+  .certs__ring .cert {
+    position: static;
+    inset: auto;
+    transform: none;
+    min-height: 124px;
+    padding: 22px 14px;
+    gap: 10px;
+  }
+  .certs__ring .cert::before { display: none; }
   .cert img, .cert__mark { width: 34px; height: 34px; }
   .cert--brand img { width: auto; height: 72px; }
   .cert span { font-size: .88rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .certs__title { animation: none; background-position: 50% center; }
+  .certs__ring { animation: none; }
+  .cert__face::after { display: none; }
 }
 
 /* Blog deck ---------------------------------------------------------------- */

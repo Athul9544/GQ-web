@@ -987,7 +987,13 @@
     }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
 
     nodes.forEach(function (n, i) {
-      n.style.transitionDelay = (i % 4) * 80 + 'ms';
+      /* The default is a rolling four-step stagger, which suits a page of
+         unrelated blocks. An element that declares its own --i is part of an
+         ordered set and sets its delay from that in CSS, so leave it alone —
+         an inline delay here would override it and scramble the order. */
+      if (!n.style.getPropertyValue('--i')) {
+        n.style.transitionDelay = (i % 4) * 80 + 'ms';
+      }
       io.observe(n);
     });
 

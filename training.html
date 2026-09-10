@@ -7,7 +7,7 @@
 <meta name="description" content="International Standard Digital Marketing Training for Students — a 3-month AI-driven course in Kochi covering SMM, SEO, Google Ads, automation and more.">
 <link rel="preload" as="image" href="assets/img/academy-hero.webp" fetchpriority="high">
 <link rel="icon" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/style.css?v=svcstack111">
+<link rel="stylesheet" href="assets/css/style.css?v=svcstack119">
 </head>
 <body>
 
@@ -248,30 +248,46 @@
       <h2 class="certs__title">Industry Recognized Certifications</h2>
     </div>
 
-    <div class="certs__grid reveal">
-      <div class="cert">
-        <img src="assets/img/tools/hubspot.svg" alt="" loading="lazy" decoding="async">
-        <span>HubSpot</span>
+    <!-- The badges ride a slowly turning ring. --i places each one around it;
+         below 700px the ring flattens back into a plain grid. -->
+    <div class="certs__stage reveal">
+      <div class="certs__ring">
+      <div class="cert" style="--i:0">
+        <div class="cert__face">
+          <img src="assets/img/tools/hubspot.svg" alt="" loading="lazy" decoding="async">
+          <span>HubSpot</span>
+        </div>
       </div>
-      <div class="cert">
-        <svg class="cert__mark" width="42" height="42" aria-hidden="true"><use href="#i-google-g"></use></svg>
-        <span>Google</span>
+      <div class="cert" style="--i:1">
+        <div class="cert__face">
+          <svg class="cert__mark" width="42" height="42" aria-hidden="true"><use href="#i-google-g"></use></svg>
+          <span>Google</span>
+        </div>
       </div>
-      <div class="cert">
-        <img src="assets/img/tools/linkedin.svg" alt="" loading="lazy" decoding="async">
-        <span>LinkedIn</span>
+      <div class="cert" style="--i:2">
+        <div class="cert__face">
+          <img src="assets/img/tools/linkedin.svg" alt="" loading="lazy" decoding="async">
+          <span>LinkedIn</span>
+        </div>
       </div>
-      <div class="cert">
-        <img src="assets/img/tools/semrush.svg" alt="" loading="lazy" decoding="async">
-        <span>Semrush</span>
+      <div class="cert" style="--i:3">
+        <div class="cert__face">
+          <img src="assets/img/tools/semrush.svg" alt="" loading="lazy" decoding="async">
+          <span>Semrush</span>
+        </div>
       </div>
       <!-- The full lockup carries the name itself, so this badge has no label. -->
-      <div class="cert cert--brand">
-        <img src="assets/img/logo-stacked.png" alt="Golden Qube" loading="lazy" decoding="async">
+      <div class="cert cert--brand" style="--i:4">
+        <div class="cert__face">
+          <img src="assets/img/logo-stacked.png" alt="Golden Qube" loading="lazy" decoding="async">
+        </div>
       </div>
-      <div class="cert">
-        <img src="assets/img/tools/microsoft.svg" alt="" loading="lazy" decoding="async">
-        <span>Microsoft</span>
+      <div class="cert" style="--i:5">
+        <div class="cert__face">
+          <img src="assets/img/tools/microsoft.svg" alt="" loading="lazy" decoding="async">
+          <span>Microsoft</span>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -484,6 +500,6 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=svcstack111"></script>
+<script src="assets/js/main.js?v=svcstack119"></script>
 </body>
 </html>
