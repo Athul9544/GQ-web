@@ -1208,6 +1208,63 @@ ul { margin: 0; padding: 0; list-style: none; }
 .career h4 { font-size: 1rem; margin: 0; }
 
 /* Blog --------------------------------------------------------------------- */
+/* Certifications ------------------------------------------------------------
+   A warm gold field the badges sit on, so the section reads as the award shelf
+   of the page rather than another white band. */
+.certs { background: linear-gradient(165deg, #fdf3dd 0%, #f7dfa8 55%, #f1c977 100%); }
+.certs__title {
+  text-transform: uppercase;
+  font-size: clamp(1.6rem, 4vw, 2.9rem);
+  line-height: 1.12;
+  letter-spacing: -.01em;
+  background: linear-gradient(100deg, #8a6412 0%, #c8992a 30%, #f0d488 50%, #b8871c 72%, #8a6412 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.certs__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.cert {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  min-height: 148px;
+  padding: 28px 22px;
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 18px;
+  /* Frosted rather than solid, so the gold field shows through the badge. */
+  background: rgba(255, 255, 255, .55);
+  box-shadow: 0 12px 30px rgba(150, 104, 20, .13);
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+}
+.cert:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, .78);
+  box-shadow: 0 18px 40px rgba(150, 104, 20, .22);
+}
+.cert img,
+.cert__mark { width: 42px; height: 42px; object-fit: contain; }
+.cert span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5a4110;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .certs__grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .cert { min-height: 124px; padding: 22px 14px; gap: 10px; }
+  .cert img, .cert__mark { width: 34px; height: 34px; }
+  .cert span { font-size: .88rem; }
+}
+
 /* Blog deck ---------------------------------------------------------------- */
 /* Posts are dealt as a stack rather than laid out in a grid: the front card is
    the one you read and the rest fan out behind it as frosted silhouettes. The
