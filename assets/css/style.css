@@ -2499,19 +2499,37 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
 .team-row:nth-child(even) .team-row__inner { justify-content: flex-start; }
 
 /* Only where the panel sits beside the name. Below this width it moves under
-   the name instead, and these would drag it back up over the portrait. */
+   the name instead, and these would drag it back up over the portrait.
+
+   The panel joins the flex line rather than being pinned to the row's edge.
+   Pinned, it sat against the far side of a 980px row while the name leaned to
+   the other — a long way from the text it describes. In the line it travels
+   with the name and keeps a fixed 26px from it, whichever way the row leans. */
 @media (min-width: 701px) {
+  .team-row__meta {
+    position: static;
+    flex: 0 0 190px;
+    width: 190px;
+    padding: 0;
+    transform: translateX(-10px);
+  }
+  .team-row:hover .team-row__meta,
+  .team-row:focus-within .team-row__meta,
+  .team-row.is-lit .team-row__meta { transform: none; }
+
+  /* Leaning right: the panel comes first in the line, so it lands on the left
+     of the name and reads towards it. */
   .team-row:nth-child(odd) .team-row__meta {
-    right: auto;
-    left: 0;
-    padding-left: 0;
-    padding-right: 26px;
+    order: -1;
+    margin-right: 26px;
     text-align: right;
-    transform: translate(10px, -50%);
+    transform: translateX(10px);
   }
   .team-row:nth-child(odd):hover .team-row__meta,
   .team-row:nth-child(odd):focus-within .team-row__meta,
-  .team-row:nth-child(odd).is-lit .team-row__meta { transform: translate(0, -50%); }
+  .team-row:nth-child(odd).is-lit .team-row__meta { transform: none; }
+
+  .team-row:nth-child(even) .team-row__meta { margin-left: 26px; text-align: left; }
 }
 
 .team-row__role {
