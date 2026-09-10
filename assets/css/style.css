@@ -316,34 +316,47 @@ ul { margin: 0; padding: 0; list-style: none; }
 .card--centered { text-align: center; }
 .card--centered .card__icon { margin-left: auto; margin-right: auto; }
 
-/* CTA box with a photographic background. */
+/* CTA card: the photo is a picture at the top of the card, not a backdrop the
+   copy has to be legible against — so it needs no darkening veil and is seen at
+   its own brightness. Same frame for both cards, so the pair reads as a set. */
 .cta-box {
-  position: relative;
   display: flex;
-  align-items: flex-end;
-  min-height: 330px;
-  padding: 44px;
+  flex-direction: column;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background-color: var(--ink);
-  background-size: cover;
-  background-position: center;
+  background: #fff;
   overflow: hidden;
-  color: rgba(255, 255, 255, .82);
-  transition: transform .25s, box-shadow .25s;
+  transition: transform .25s, box-shadow .25s, border-color .25s;
 }
-.cta-box::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(160deg, rgba(13, 17, 32, .72) 0%, rgba(13, 17, 32, .92) 100%);
-  transition: background .25s;
+.cta-box:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(212, 160, 23, .4);
 }
-.cta-box:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.cta-box:hover::before { background: linear-gradient(160deg, rgba(13, 17, 32, .64) 0%, rgba(13, 17, 32, .9) 100%); }
-.cta-box__body { position: relative; z-index: 2; }
-.cta-box h3 { color: #fff; }
-.cta-box p { color: rgba(255, 255, 255, .78); font-size: .95rem; margin-bottom: 1.4rem; }
-.cta-box .eyebrow { background: rgba(212, 160, 23, .22); color: var(--gold-light); }
+
+.cta-box__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--bg-soft);
+}
+.cta-box__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .6s cubic-bezier(.22, .68, .28, 1);
+}
+.cta-box:hover .cta-box__media img { transform: scale(1.05); }
+
+.cta-box__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: 30px 32px 34px;
+}
+.cta-box h3 { margin-bottom: .5rem; font-size: 1.28rem; }
+.cta-box p { margin: 0; font-size: .95rem; }
 
 /* CTA cards — one at a time, with the photo set into the card --------------
    The pair rides the same pinned slide as the section hand-offs, so the first
@@ -2114,7 +2127,7 @@ img.chatbot__icon-open { width: 34px; height: 34px; object-fit: contain; }
   .reviews__track { padding-bottom: 34px; }
   .footer__grid { grid-template-columns: 1fr; gap: 32px; }
   .footer__bottom { justify-content: center; text-align: center; }
-  .cta-box { padding: 32px 24px; min-height: 290px; }
+  .cta-box__body { padding: 24px 22px 28px; }
   .counter-badge { right: 10px; bottom: -14px; padding: 16px 20px; }
 }
 
