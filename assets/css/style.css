@@ -1257,6 +1257,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .cert img,
 .cert__mark { width: 42px; height: 42px; object-fit: contain; }
+/* The lockup stands in for both the mark and the label, so it is sized to the
+   height those two take together and the badges stay level. */
+.cert--brand img { width: auto; height: 94px; }
 .cert span {
   font-size: 1rem;
   font-weight: 700;
@@ -1268,6 +1271,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   .certs__grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .cert { min-height: 124px; padding: 22px 14px; gap: 10px; }
   .cert img, .cert__mark { width: 34px; height: 34px; }
+  .cert--brand img { width: auto; height: 72px; }
   .cert span { font-size: .88rem; }
 }
 
